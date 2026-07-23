@@ -73,6 +73,14 @@ const Doctor = sequelize.define('Doctor', {
     type: DataTypes.ENUM('Active', 'Inactive', 'Pending', 'Approved', 'Rejected'),
     defaultValue: 'Pending',
   },
+  isOnline: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  reviews: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
 });
 
 User.hasOne(Doctor, { foreignKey: 'userId', as: 'doctor', onDelete: 'CASCADE' });

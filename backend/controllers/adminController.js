@@ -8,6 +8,8 @@ import Bill from '../models/Bill.js';
 import MedicalRecord from '../models/MedicalRecord.js';
 import sequelize from '../config/db.js';
 import { Op } from 'sequelize';
+import exceljs from 'exceljs';
+import PDFDocument from 'pdfkit';
 
 export const getDashboardAnalytics = async (req, res, next) => {
   try {
@@ -100,6 +102,16 @@ export const getDashboardAnalytics = async (req, res, next) => {
       });
     }
 
+    // Revenue calculations
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
+
+    const totalRevenue = await Bill.sum('amount', { where: { status: 'Paid' } }) || 0;
+    const todayRevenue = await Bill.sum('amount', { where: { status: 'Paid', billingDate: todayStr } }) || 0;
+    const weeklyRevenue = await Bill.sum('amount', { where: { status: 'Paid', billingDate: { [Op.gte]: sevenDaysAgoStr } } }) || 0;
+    const monthlyRevenue = await Bill.sum('amount', { where: { status: 'Paid', billingDate: { [Op.gte]: firstDayOfMonth } } }) || 0;
+
     res.status(200).json({
       success: true,
       stats: {
@@ -112,6 +124,12 @@ export const getDashboardAnalytics = async (req, res, next) => {
         monthlyAppointments: monthlyAppointmentsCount,
         mostBookedHospital,
         mostConsultedDoctor,
+        revenue: {
+          total: totalRevenue,
+          today: todayRevenue,
+          weekly: weeklyRevenue,
+          monthly: monthlyRevenue
+        },
         breakdown: {
           Pending: pendingCount,
           Accepted: acceptedCount,
@@ -341,8 +359,9 @@ export const createPatientAdmin = async (req, res, next) => {
       dateOfBirth,
       bloodGroup,
       address,
-      allergies: allergies || [],
-      medicalHistory: medicalHistory || []
+      medicalHistory: medicalHistory || [],
+      familyMembers: req.body.familyMembers || [],
+      insuranceInfo: req.body.insuranceInfo || {},
     });
 
     res.status(201).json({ success: true, user, patient });
@@ -358,8 +377,7 @@ export const updatePatientAdmin = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Patient not found' });
     }
 
-    const user = await User.findByPk(patient.userId);
-    const { name, phone, gender, email, dateOfBirth, bloodGroup, address, allergies, medicalHistory } = req.body;
+    const { name, phone, gender, email, dateOfBirth, bloodGroup, address, allergies, medicalHistory, familyMembers, insuranceInfo } = req.body;
 
     if (user) {
       if (name) user.name = name;
@@ -374,6 +392,8 @@ export const updatePatientAdmin = async (req, res, next) => {
     if (address) patient.address = address;
     if (allergies) patient.allergies = allergies;
     if (medicalHistory) patient.medicalHistory = medicalHistory;
+    if (familyMembers) patient.familyMembers = familyMembers;
+    if (insuranceInfo) patient.insuranceInfo = insuranceInfo;
     await patient.save();
 
     res.status(200).json({ success: true, patient });
@@ -488,19 +508,22 @@ export const getAllAppointmentsAdmin = async (req, res, next) => {
 };
 
 export const createAppointmentAdmin = async (req, res, next) => {
+  const t = await sequelize.transaction();
   try {
     const { patientId, doctorId, hospitalId, date, timeSlot, reason, status } = req.body;
     
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const countToday = await Appointment.count({
-      where: { appointmentNumber: { [Op.like]: `APT-${todayStr}-%` } }
+      where: { appointmentNumber: { [Op.like]: `APT-${todayStr}-%` } },
+      transaction: t
     });
     const appointmentNumber = `APT-${todayStr}-${String(countToday + 1).padStart(4, '0')}`;
 
     const countDoctorAppointments = await Appointment.count({
-      where: { doctorId, date }
+      where: { doctorId, date },
+      transaction: t
     });
-    const tokenNumber = String(countDoctorAppointments + 1).padStart(3, '0');
+    const tokenNumber = String(countDoctorAppointments + 1);
 
     const appointment = await Appointment.create({
       patientId,
@@ -512,9 +535,9 @@ export const createAppointmentAdmin = async (req, res, next) => {
       timeSlot,
       reason,
       status: status || 'Pending',
-    });
+    }, { transaction: t });
 
-    const docProfile = await Doctor.findOne({ where: { userId: doctorId } });
+    const docProfile = await Doctor.findOne({ where: { userId: doctorId }, transaction: t });
     const billingDate = new Date().toISOString().slice(0, 10);
     const invoiceNumber = `INV-${todayStr}-${String(countToday + 1).padStart(4, '0')}`;
     const amount = docProfile ? docProfile.fees : 500;
@@ -528,10 +551,12 @@ export const createAppointmentAdmin = async (req, res, next) => {
       status: 'Unpaid',
       paymentMethod: 'Pending',
       billingDate,
-    });
+    }, { transaction: t });
 
+    await t.commit();
     res.status(201).json({ success: true, appointment });
   } catch (error) {
+    if (t) await t.rollback();
     next(error);
   }
 };
@@ -712,6 +737,78 @@ export const deleteMedicalRecordAdmin = async (req, res, next) => {
 
     await record.destroy();
     res.status(200).json({ success: true, message: 'Medical record deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+export const exportReportExcel = async (req, res, next) => {
+  try {
+    const appointments = await Appointment.findAll({
+      include: [
+        { model: User, as: 'patient', attributes: ['name', 'email'] },
+        { model: User, as: 'doctor', attributes: ['name'] }
+      ]
+    });
+
+    const workbook = new exceljs.Workbook();
+    const worksheet = workbook.addWorksheet('Appointments');
+
+    worksheet.columns = [
+      { header: 'Appointment Number', key: 'appointmentNumber', width: 25 },
+      { header: 'Patient Name', key: 'patientName', width: 25 },
+      { header: 'Doctor Name', key: 'doctorName', width: 25 },
+      { header: 'Date', key: 'date', width: 15 },
+      { header: 'Time Slot', key: 'timeSlot', width: 15 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Token', key: 'tokenNumber', width: 10 }
+    ];
+
+    appointments.forEach(app => {
+      worksheet.addRow({
+        appointmentNumber: app.appointmentNumber,
+        patientName: app.patient ? app.patient.name : 'N/A',
+        doctorName: app.doctor ? app.doctor.name : 'N/A',
+        date: app.date,
+        timeSlot: app.timeSlot,
+        status: app.status,
+        tokenNumber: app.tokenNumber
+      });
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=appointments_report.xlsx');
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportReportPDF = async (req, res, next) => {
+  try {
+    const appointments = await Appointment.findAll({
+      include: [
+        { model: User, as: 'patient', attributes: ['name'] },
+        { model: User, as: 'doctor', attributes: ['name'] }
+      ]
+    });
+
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=appointments_report.pdf');
+    doc.pipe(res);
+
+    doc.fontSize(20).text('AI Hospital System - Appointment Summary Report', { align: 'center' });
+    doc.moveDown();
+
+    appointments.forEach(app => {
+      doc.fontSize(12).text(`ID: ${app.appointmentNumber} | Patient: ${app.patient ? app.patient.name : 'N/A'} | Doctor: Dr. ${app.doctor ? app.doctor.name : 'N/A'}`);
+      doc.text(`Date: ${app.date} | Slot: ${app.timeSlot} | Status: ${app.status} | Token: ${app.tokenNumber}`);
+      doc.text('---------------------------------------------------------------------------------');
+      doc.moveDown(0.5);
+    });
+
+    doc.end();
   } catch (error) {
     next(error);
   }

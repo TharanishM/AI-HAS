@@ -24,7 +24,8 @@ import {
   getAllMedicalRecordsAdmin,
   createMedicalRecordAdmin,
   updateMedicalRecordAdmin,
-  deleteMedicalRecordAdmin,
+  exportReportExcel,
+  exportReportPDF,
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -70,5 +71,9 @@ router.get('/medical-records', getAllMedicalRecordsAdmin);
 router.post('/medical-records', createMedicalRecordAdmin);
 router.put('/medical-records/:id', updateMedicalRecordAdmin);
 router.delete('/medical-records/:id', deleteMedicalRecordAdmin);
+
+// Reports Export
+router.get('/reports/excel', exportReportExcel);
+router.get('/reports/pdf', exportReportPDF);
 
 export default router;

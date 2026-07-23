@@ -10,6 +10,10 @@ import {
   resetPassword,
   changePassword,
   refreshToken,
+  enable2FA,
+  disable2FA,
+  verify2FA,
+  verify2FALogin,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -26,5 +30,11 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.put('/change-password', protect, changePassword);
 router.post('/refresh-token', refreshToken);
+
+// Two-Factor Authentication (2FA) Routes
+router.post('/2fa/enable', protect, enable2FA);
+router.post('/2fa/disable', protect, disable2FA);
+router.post('/2fa/verify', protect, verify2FA);
+router.post('/2fa/verify-login', verify2FALogin);
 
 export default router;

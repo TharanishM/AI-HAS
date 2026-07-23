@@ -34,11 +34,21 @@ const DoctorDashboard = () => {
   });
   const [savingRecord, setSavingRecord] = useState(false);
 
+  const [isOnline, setIsOnline] = useState(false);
+  const [reviews, setReviews] = useState([]);
+
   const fetchAppointments = async () => {
     try {
       const res = await API.get('/appointments');
       if (res.data.success) {
         setAppointments(res.data.appointments);
+      }
+      
+      // Fetch online status from /auth/me or doctor profile details
+      const profileRes = await API.get('/auth/me');
+      if (profileRes.data.success && profileRes.data.profile) {
+        setIsOnline(profileRes.data.profile.isOnline || false);
+        setReviews(profileRes.data.profile.reviews || []);
       }
     } catch (error) {
       console.error(error);
@@ -50,6 +60,18 @@ const DoctorDashboard = () => {
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  const handleToggleOnlineStatus = async () => {
+    try {
+      const res = await API.put('/doctors/status');
+      if (res.data.success) {
+        setIsOnline(res.data.isOnline);
+        addToast(`Status updated to ${res.data.isOnline ? 'Online' : 'Offline'}`, 'success');
+      }
+    } catch (error) {
+      addToast('Failed to update online status', 'error');
+    }
+  };
 
   const handleUpdateStatus = async (id, status) => {
     try {
@@ -132,11 +154,28 @@ const DoctorDashboard = () => {
 
   return (
     <div className="flex flex-col gap-8 w-full">
-      <div>
-        <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white">Doctor Portal</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Review pending bookings, consult patient records, and submit electronic medical records.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white flex items-center gap-3">
+            Doctor Portal
+            <span className={`w-3.5 h-3.5 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            Review pending bookings, consult patient records, and submit electronic medical records.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 px-4 rounded-xl border dark:border-slate-800 shrink-0">
+          <span className="text-xs font-bold text-slate-800 dark:text-white">
+            Online Status: {isOnline ? 'Active' : 'Offline'}
+          </span>
+          <button
+            type="button"
+            onClick={handleToggleOnlineStatus}
+            className={`w-12 h-6 rounded-full p-0.5 transition-colors relative ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`}
+          >
+            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${isOnline ? 'translate-x-6' : 'translate-x-0'}`}></div>
+          </button>
+        </div>
       </div>
 
       {}
@@ -364,6 +403,32 @@ const DoctorDashboard = () => {
               <p className="text-xs mt-1">Select an appointment from the list to view profile details and write prescriptions.</p>
             </div>
           )}
+
+          <GlassCard className="mt-6 p-4">
+            <h3 className="font-bold text-slate-800 dark:text-white mb-4 text-sm flex items-center gap-1.5">
+              ⭐ Patient Reviews & Feedback
+            </h3>
+            {reviews && reviews.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {reviews.map((rev, index) => (
+                  <div key={index} className="p-3 bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-800 rounded-xl text-xs flex flex-col gap-1">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-slate-800 dark:text-white">{rev.patientName || 'Anonymous'}</span>
+                      <span className="text-amber-500 font-semibold">⭐ {rev.rating}/5</span>
+                    </div>
+                    <p className="text-slate-550 dark:text-slate-400 mt-1 leading-relaxed font-medium">
+                      "{rev.comment}"
+                    </p>
+                    <span className="text-[9px] text-slate-400 mt-0.5">
+                      {new Date(rev.createdAt || rev.date).toLocaleDateString('en-GB')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-450 dark:text-slate-500">No reviews submitted yet.</p>
+            )}
+          </GlassCard>
         </div>
       </div>
 

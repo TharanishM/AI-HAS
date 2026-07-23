@@ -78,6 +78,18 @@ const Hospital = sequelize.define('Hospital', {
     type: DataTypes.ENUM('Pending', 'Approved', 'Rejected'),
     defaultValue: 'Approved',
   },
+  gallery: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  facilities: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  liveBedAvailability: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
 });
 
 export default Hospital;

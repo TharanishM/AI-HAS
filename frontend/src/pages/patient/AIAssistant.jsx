@@ -223,14 +223,35 @@ const AIAssistant = () => {
           </AnimatePresence>
 
           {loading && (
-            <div className="flex gap-3 self-start">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white bg-indigo-500">
+            <div className="flex gap-3 self-start items-start">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white bg-indigo-500 shadow-md shadow-indigo-500/20 shrink-0">
                 <Bot className="w-5 h-5" />
               </div>
-              <div className="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl rounded-tl-none border border-slate-200/30 dark:border-slate-800 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+              <div className="flex flex-col gap-2">
+                <div className="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl rounded-tl-none border border-slate-200/30 dark:border-slate-800 flex flex-col gap-2 shadow-sm max-w-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 flex items-center justify-center bg-indigo-500/10 text-indigo-500 rounded-lg">
+                      <Activity className="w-3.5 h-3.5 animate-[pulse_1s_infinite_ease-in-out]" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-350">Analyzing symptoms...</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-semibold block">
+                    Retrieving clinical departments and scanning parameters
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 pl-3">
+                  <svg className="w-32 h-6 text-indigo-500 dark:text-indigo-400" viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M0,10 L30,10 L35,3 L42,17 L48,7 L52,10 L100,10"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeDasharray="100"
+                      strokeDashoffset="100"
+                      className="animate-[dash_1.8s_linear_infinite]"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
           )}

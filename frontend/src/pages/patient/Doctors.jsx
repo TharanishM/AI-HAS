@@ -4,6 +4,7 @@ import API from '../../services/api';
 import { Search, Filter, Star, Briefcase, IndianRupee, Calendar, ChevronRight, Building } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { ListSkeleton } from '../../components/LoadingSkeleton';
+import { ImageLoader } from '../../components/ImageLoader';
 
 const PatientDoctors = () => {
   const navigate = useNavigate();
@@ -215,11 +216,13 @@ const PatientDoctors = () => {
                 <GlassCard key={doc._id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div className="flex items-start sm:items-center gap-5">
                     {doc.userId?.avatar ? (
-                      <img
-                        src={`http://localhost:5000${doc.userId.avatar}`}
-                        alt={doc.userId.name}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-brand-500/20"
-                      />
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/20">
+                        <ImageLoader
+                          src={`http://localhost:5000${doc.userId.avatar}`}
+                          alt={doc.userId.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     ) : (
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-100 dark:bg-brand-950 text-brand-500 rounded-2xl flex items-center justify-center font-bold text-xl sm:text-2xl">
                         {doc.userId?.name?.charAt(0) || 'D'}
@@ -256,6 +259,10 @@ const PatientDoctors = () => {
                         <span className="flex items-center gap-0.5">
                           <IndianRupee className="w-3.5 h-3.5 text-emerald-500" /> ₹{doc.fees} Consultation
                         </span>
+                        <span className="flex items-center gap-1.5">
+                          <span className={`w-2.5 h-2.5 rounded-full ${doc.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
+                          <span className="font-semibold">{doc.isOnline ? 'Online' : 'Offline'}</span>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -267,13 +274,36 @@ const PatientDoctors = () => {
                     >
                       Book Visit <Calendar className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={() => {
+                        const rating = window.prompt('Enter your rating (1-5):');
+                        if (!rating || isNaN(rating) || rating < 1 || rating > 5) {
+                          alert('Please enter a valid rating between 1 and 5');
+                          return;
+                        }
+                        const comment = window.prompt('Enter your review comment:');
+                        if (!comment) return;
+
+                        API.post(`/doctors/${doc.userId._id}/reviews`, { rating: Number(rating), comment })
+                          .then((res) => {
+                            if (res.data.success) {
+                              alert('Review submitted successfully!');
+                              fetchDoctors();
+                            }
+                          })
+                          .catch((err) => {
+                            alert('Failed to submit review: ' + (err.response?.data?.message || err.message));
+                          });
+                      }}
+                      className="w-full sm:flex-1 md:w-44 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20 rounded-xl font-bold text-[11px] transition-all"
+                    >
+                      Submit Review
+                    </button>
                     {}
                     <div className="text-center md:text-left mt-1 text-[10px] text-slate-400 leading-relaxed">
                       Available days:{' '}
                       <span className="font-semibold text-slate-500 dark:text-slate-300">
-                        {Array.isArray(doc.availability)
-                          ? doc.availability.map(a => a.day.substring(0, 3)).join(', ')
-                          : ''}
+                        {doc.availability ? (Array.isArray(doc.availability) ? doc.availability.map(a => a.day.substring(0, 3)).join(', ') : '') : ''}
                       </span>
                     </div>
                   </div>

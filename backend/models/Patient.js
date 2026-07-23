@@ -37,6 +37,14 @@ const Patient = sequelize.define('Patient', {
     type: DataTypes.JSON,
     defaultValue: [],
   },
+  familyMembers: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
+  insuranceInfo: {
+    type: DataTypes.JSON,
+    defaultValue: {},
+  },
 });
 
 User.hasOne(Patient, { foreignKey: 'userId', as: 'patient', onDelete: 'CASCADE' });

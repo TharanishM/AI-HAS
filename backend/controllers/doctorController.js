@@ -224,3 +224,53 @@ export const updateDoctorAvailability = async (req, res, next) => {
     next(error);
   }
 };
+
+export const addDoctorReview = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+    const doctor = await Doctor.findByPk(req.params.id);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+
+    const reviews = doctor.reviews || [];
+    const newReview = {
+      patientId: req.user.id,
+      patientName: req.user.name,
+      rating: parseFloat(rating),
+      comment,
+      createdAt: new Date()
+    };
+    reviews.push(newReview);
+    
+    const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
+    doctor.reviews = reviews;
+    doctor.rating = parseFloat((totalRating / reviews.length).toFixed(1));
+    await doctor.save();
+
+    res.status(200).json({ success: true, message: 'Review added successfully', doctor });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleDoctorOnlineStatus = async (req, res, next) => {
+  try {
+    let doctor = await Doctor.findOne({ where: { userId: req.params.id } });
+    if (!doctor) doctor = await Doctor.findByPk(req.params.id);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+
+    if (req.user.role !== 'Admin' && doctor.userId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to change online status' });
+    }
+
+    doctor.isOnline = !doctor.isOnline;
+    await doctor.save();
+
+    res.status(200).json({ success: true, isOnline: doctor.isOnline });
+  } catch (error) {
+    next(error);
+  }
+};

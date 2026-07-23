@@ -9,7 +9,6 @@
   }
 }
 
-/* Glassmorphism custom classes */
 .glass-panel {
   @apply bg-white/70 dark:bg-slate-900/75 backdrop-blur-md border border-white/20 dark:border-slate-800/50 shadow-xl shadow-slate-100/50 dark:shadow-none;
 }
@@ -22,7 +21,6 @@
   @apply bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm border border-slate-200 dark:border-slate-800 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200 outline-none rounded-xl;
 }
 
-/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -34,4 +32,26 @@
 
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-300 dark:bg-slate-800 rounded-full hover:bg-slate-400 dark:hover:bg-slate-700;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-loading {
+  animation: loading 1.5s infinite ease-in-out;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
 }

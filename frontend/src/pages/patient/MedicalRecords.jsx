@@ -59,9 +59,19 @@ const PatientMedicalRecords = () => {
                     </span>
                   </div>
                 </div>
-                <div className="text-xs font-semibold text-slate-400 flex items-center gap-1.5 self-end sm:self-start">
-                  <Calendar className="w-4 h-4 text-brand-500" />
-                  {new Date(rec.date).toLocaleDateString()}
+                <div className="flex flex-col items-end gap-2 self-end sm:self-start">
+                  <div className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-brand-500" />
+                    {new Date(rec.date).toLocaleDateString()}
+                  </div>
+                  <a
+                    href={`http://localhost:5000/api/appointments/medical-records/${rec._id}/download`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 hover:text-emerald-600 transition-colors"
+                  >
+                    Download Prescription PDF
+                  </a>
                 </div>
               </div>
 

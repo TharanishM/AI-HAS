@@ -21,7 +21,12 @@ const Login = () => {
   const [newPassword, setNewPassword] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
 
-  const { login } = useAuth();
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [twoFACode, setTwoFACode] = useState('');
+  const [twoFAUserId, setTwoFAUserId] = useState('');
+  const [twoFALoading, setTwoFALoading] = useState(false);
+
+  const { login, verify2FALogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { addToast } = useToast();
@@ -50,9 +55,16 @@ const Login = () => {
     e.preventDefault();
     setLoadingLocal(true);
     try {
-      const loggedUser = await login(email, password);
+      const response = await login(email, password);
       
-      if (loggedUser.role !== selectedRole) {
+      if (response && response.requires2FA) {
+        setTwoFAUserId(response.userId);
+        setShow2FAModal(true);
+        setLoadingLocal(false);
+        return;
+      }
+
+      if (response.role !== selectedRole) {
         addToast(`Invalid credentials for role ${selectedRole}`, 'error');
         setLoadingLocal(false);
         return;
@@ -64,13 +76,34 @@ const Login = () => {
         localStorage.removeItem(`savedEmail_${selectedRole}`);
       }
 
-      if (loggedUser.role === 'Patient') navigate('/patient');
-      else if (loggedUser.role === 'Doctor') navigate('/doctor');
-      else if (loggedUser.role === 'Admin') navigate('/admin');
+      if (response.role === 'Patient') navigate('/patient');
+      else if (response.role === 'Doctor') navigate('/doctor');
+      else if (response.role === 'Admin') navigate('/admin');
     } catch (err) {
       console.error(err);
     } finally {
       setLoadingLocal(false);
+    }
+  };
+
+  const handle2FAVerify = async (e) => {
+    e.preventDefault();
+    setTwoFALoading(true);
+    try {
+      const loggedUser = await verify2FALogin(twoFAUserId, twoFACode);
+      if (loggedUser) {
+        if (rememberMe) {
+          localStorage.setItem(`savedEmail_${selectedRole}`, email);
+        }
+        setShow2FAModal(false);
+        if (loggedUser.role === 'Patient') navigate('/patient');
+        else if (loggedUser.role === 'Doctor') navigate('/doctor');
+        else if (loggedUser.role === 'Admin') navigate('/admin');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTwoFALoading(false);
     }
   };
 
@@ -336,6 +369,51 @@ const Login = () => {
                 </button>
               </form>
             )}
+          </GlassCard>
+        </div>
+      )}
+      {show2FAModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+          <GlassCard className="w-full max-w-md flex flex-col gap-5 border border-white/20 p-6 shadow-2xl">
+            <div className="flex justify-between items-center border-b pb-2 dark:border-slate-800">
+              <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                <KeyRound className="w-5 h-5 text-indigo-500" /> Two-Factor Verification
+              </h3>
+              <button
+                onClick={() => setShow2FAModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handle2FAVerify} className="flex flex-col gap-4 text-xs font-semibold text-slate-655 dark:text-slate-400">
+              <p className="text-[11px] text-slate-450 leading-relaxed font-normal">
+                Please enter the 6-digit verification code from your authenticator app.
+              </p>
+              <div className="flex flex-col gap-1.5">
+                <label>Verification Code</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={twoFACode}
+                  onChange={(e) => setTwoFACode(e.target.value)}
+                  placeholder="000 000"
+                  className="w-full px-4 py-2.5 rounded-xl glass-input text-slate-850 dark:text-white text-center font-mono text-lg tracking-widest"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={twoFALoading}
+                className="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-md mt-2"
+              >
+                {twoFALoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
+                ) : (
+                  'Verify Code'
+                )}
+              </button>
+            </form>
           </GlassCard>
         </div>
       )}

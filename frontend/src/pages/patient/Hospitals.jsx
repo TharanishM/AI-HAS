@@ -4,6 +4,7 @@ import API from '../../services/api';
 import { Search, MapPin, Phone, Clock, Star, ArrowRight, Map, Heart, Compass } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { CardSkeleton } from '../../components/LoadingSkeleton';
+import { ImageLoader } from '../../components/ImageLoader';
 
 const Hospitals = () => {
   const navigate = useNavigate();
@@ -154,23 +155,22 @@ const Hospitals = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {hospitals.map((hospital) => (
             <GlassCard key={hospital.id} className="flex flex-col h-full overflow-hidden p-0 relative group">
-              {}
               <div className="h-40 w-full overflow-hidden relative bg-slate-200 dark:bg-slate-800">
                 {hospital.banner ? (
-                  <img
+                  <ImageLoader
                     src={`http://localhost:5000${hospital.banner}`}
                     alt={hospital.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    fallbackIcon={Map}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-r from-brand-500/20 to-indigo-500/20 flex items-center justify-center text-brand-500">
                     <Map className="w-12 h-12 opacity-50" />
                   </div>
                 )}
-                {}
                 <div className="absolute bottom-3 left-4 w-12 h-12 rounded-xl bg-white dark:bg-slate-900 p-1 shadow-lg overflow-hidden border border-white/20">
                   {hospital.logo ? (
-                    <img
+                    <ImageLoader
                       src={`http://localhost:5000${hospital.logo}`}
                       alt="logo"
                       className="w-full h-full object-cover rounded-lg"
@@ -224,11 +224,35 @@ const Hospitals = () => {
                       <Clock className="w-3.5 h-3.5 text-indigo-500" />
                       <span>{hospital.openingHours}</span>
                     </div>
+                    {hospital.liveBedAvailability !== undefined && (
+                      <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/5 px-2.5 py-1 rounded-xl text-emerald-600 dark:text-emerald-400 font-bold w-fit mt-1">
+                        <Heart className="w-3.5 h-3.5 fill-emerald-500" />
+                        <span>Live Beds Available: {hospital.liveBedAvailability}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                <button
+                  onClick={async () => {
+                    const address = window.prompt('Enter your pickup address for Ambulance request:');
+                    if (!address) return;
+                    try {
+                      const res = await API.post(`/hospitals/${hospital.id}/ambulance`, { pickupAddress: address });
+                      if (res.data.success) {
+                        alert(`Ambulance Request Dispatched!\nETA: ${res.data.request.eta} mins\nVehicle: ${res.data.request.vehicleNumber}`);
+                      }
+                    } catch (err) {
+                      alert('Ambulance dispatch failed: ' + (err.response?.data?.message || err.message));
+                    }
+                  }}
+                  className="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-500/10"
+                >
+                  🚑 Dispatch Ambulance Request
+                </button>
+
                 {}
-                <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <Link
                     to={`/patient/hospitals/${hospital.id}`}
                     className="py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1 transition-all"

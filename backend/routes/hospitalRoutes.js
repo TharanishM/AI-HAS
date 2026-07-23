@@ -5,6 +5,7 @@ import {
   deleteHospital,
   getHospitals,
   getHospitalById,
+  requestAmbulance,
 } from '../controllers/hospitalController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -35,5 +36,7 @@ router.route('/:id')
     updateHospital
   )
   .delete(protect, authorize('Admin'), deleteHospital);
+
+router.post('/:id/ambulance', protect, requestAmbulance);
 
 export default router;

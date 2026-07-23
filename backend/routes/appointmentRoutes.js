@@ -6,6 +6,8 @@ import {
   updateAppointmentStatus,
   createMedicalRecord,
   getMedicalRecords,
+  downloadAppointmentReceipt,
+  downloadPrescriptionPDF,
 } from '../controllers/appointmentController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -17,5 +19,7 @@ router.put('/:id/reschedule', protect, rescheduleAppointment);
 router.put('/:id/status', protect, updateAppointmentStatus);
 router.post('/:id/medical-record', protect, authorize('Doctor'), createMedicalRecord);
 router.get('/medical-records', protect, getMedicalRecords);
+router.get('/:id/receipt', protect, downloadAppointmentReceipt);
+router.get('/medical-records/:id/download', protect, downloadPrescriptionPDF);
 
 export default router;

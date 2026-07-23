@@ -1,4 +1,5 @@
 import { Op } from 'sequelize';
+import sequelize from '../config/db.js';
 import Appointment from '../models/Appointment.js';
 import User from '../models/User.js';
 import Doctor from '../models/Doctor.js';
@@ -6,26 +7,43 @@ import Notification from '../models/Notification.js';
 import MedicalRecord from '../models/MedicalRecord.js';
 import Hospital from '../models/Hospital.js';
 import Bill from '../models/Bill.js';
+import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 
-const createAlert = async (userId, title, message, type) => {
+const createAlert = async (req, userId, title, message, type) => {
   try {
-    await Notification.create({ userId, title, message, type });
+    const notification = await Notification.create({ userId, title, message, type });
+    if (req && req.app) {
+      const io = req.app.get('io');
+      if (io) {
+        io.to(userId).emit('notification', {
+          id: notification.id,
+          title,
+          message,
+          type,
+          isRead: false,
+          createdAt: notification.createdAt
+        });
+      }
+    }
   } catch (error) {
     console.error('Error creating notification:', error);
   }
 };
 
 export const bookAppointment = async (req, res, next) => {
+  const t = await sequelize.transaction();
   try {
     const { doctorId, hospitalId, date, timeSlot, reason } = req.body;
     const patientId = req.user.id;
 
-    const doctorUser = await User.findByPk(doctorId);
+    const doctorUser = await User.findByPk(doctorId, { transaction: t });
     if (!doctorUser || doctorUser.role !== 'Doctor') {
+      await t.rollback();
       return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
 
-    const doctorProfile = await Doctor.findOne({ where: { userId: doctorId } });
+    const doctorProfile = await Doctor.findOne({ where: { userId: doctorId }, transaction: t });
     const finalHospitalId = hospitalId || (doctorProfile ? doctorProfile.hospitalId : null);
 
     const bookingConflict = await Appointment.findOne({
@@ -34,10 +52,13 @@ export const bookAppointment = async (req, res, next) => {
         date,
         timeSlot,
         status: { [Op.in]: ['Pending', 'Accepted', 'Rescheduled'] }
-      }
+      },
+      lock: true,
+      transaction: t
     });
 
     if (bookingConflict) {
+      await t.rollback();
       return res.status(400).json({ success: false, message: 'This timeslot has already been booked' });
     }
 
@@ -47,7 +68,8 @@ export const bookAppointment = async (req, res, next) => {
         appointmentNumber: {
           [Op.like]: `APT-${todayStr}-%`
         }
-      }
+      },
+      transaction: t
     });
     const appointmentNumber = `APT-${todayStr}-${String(countToday + 1).padStart(4, '0')}`;
 
@@ -55,9 +77,10 @@ export const bookAppointment = async (req, res, next) => {
       where: {
         doctorId,
         date
-      }
+      },
+      transaction: t
     });
-    const tokenNumber = String(countDoctorAppointments + 1).padStart(3, '0');
+    const tokenNumber = String(countDoctorAppointments + 1);
 
     const appointment = await Appointment.create({
       patientId,
@@ -69,7 +92,7 @@ export const bookAppointment = async (req, res, next) => {
       timeSlot,
       reason,
       status: 'Pending',
-    });
+    }, { transaction: t });
 
     // Generate Invoice/Bill
     const billingDate = new Date().toISOString().slice(0, 10);
@@ -85,7 +108,9 @@ export const bookAppointment = async (req, res, next) => {
       status: 'Unpaid',
       paymentMethod: 'Pending',
       billingDate,
-    });
+    }, { transaction: t });
+
+    await t.commit();
 
     const populatedAppointment = await Appointment.findByPk(appointment.id, {
       include: [
@@ -95,6 +120,7 @@ export const bookAppointment = async (req, res, next) => {
     });
 
     await createAlert(
+      req,
       patientId,
       'Appointment Booked',
       `Your appointment request with Dr. ${doctorUser.name} on ${date} at ${timeSlot} has been submitted. Token: ${tokenNumber}`,
@@ -102,6 +128,7 @@ export const bookAppointment = async (req, res, next) => {
     );
 
     await createAlert(
+      req,
       doctorId,
       'New Appointment Request',
       `You have a new appointment request from Patient ${req.user.name} for ${date} at ${timeSlot}. Token: ${tokenNumber}`,
@@ -110,6 +137,7 @@ export const bookAppointment = async (req, res, next) => {
 
     res.status(201).json({ success: true, appointment: populatedAppointment });
   } catch (error) {
+    if (t) await t.rollback();
     next(error);
   }
 };
@@ -219,8 +247,8 @@ export const rescheduleAppointment = async (req, res, next) => {
 
     const alertMsg = `Appointment rescheduled from ${oldDate} at ${oldSlot} to ${date} at ${timeSlot}.`;
     
-    await createAlert(appointment.patientId, 'Appointment Rescheduled', alertMsg, 'Booking');
-    await createAlert(appointment.doctorId, 'Appointment Rescheduled', alertMsg, 'Booking');
+    await createAlert(req, appointment.patientId, 'Appointment Rescheduled', alertMsg, 'Booking');
+    await createAlert(req, appointment.doctorId, 'Appointment Rescheduled', alertMsg, 'Booking');
 
     res.status(200).json({ success: true, appointment });
   } catch (error) {
@@ -262,8 +290,8 @@ export const updateAppointmentStatus = async (req, res, next) => {
     await appointment.save();
 
     const msg = `Appointment on ${appointment.date} at ${appointment.timeSlot} is now ${status}.`;
-    await createAlert(appointment.patientId, `Appointment ${status}`, msg, status === 'Cancelled' ? 'Cancellation' : 'Info');
-    await createAlert(appointment.doctorId, `Appointment ${status}`, msg, status === 'Cancelled' ? 'Cancellation' : 'Info');
+    await createAlert(req, appointment.patientId, `Appointment ${status}`, msg, status === 'Cancelled' ? 'Cancellation' : 'Info');
+    await createAlert(req, appointment.doctorId, `Appointment ${status}`, msg, status === 'Cancelled' ? 'Cancellation' : 'Info');
 
     res.status(200).json({ success: true, appointment });
   } catch (error) {
@@ -298,6 +326,7 @@ export const createMedicalRecord = async (req, res, next) => {
     });
 
     await createAlert(
+      req,
       appointment.patientId,
       'New Medical Prescription Filed',
       `Dr. ${req.user.name} has submitted a prescription/medical record for your visit. Check dashboard to view.`,
@@ -380,6 +409,117 @@ export const getMedicalRecords = async (req, res, next) => {
     });
 
     res.status(200).json({ success: true, count: formatted.length, records: formatted });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const downloadAppointmentReceipt = async (req, res, next) => {
+  try {
+    const appointment = await Appointment.findByPk(req.params.id, {
+      include: [
+        { model: User, as: 'patient', attributes: ['name', 'phone', 'email'] },
+        { model: User, as: 'doctor', attributes: ['name'] },
+        { model: Hospital, as: 'hospital', attributes: ['name', 'address', 'phone'] }
+      ]
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=receipt_${appointment.appointmentNumber}.pdf`);
+    doc.pipe(res);
+
+    // Title
+    doc.fontSize(20).text('Hospital Appointment Receipt', { align: 'center' });
+    doc.moveDown();
+
+    // Details
+    doc.fontSize(12).text(`Appointment Number: ${appointment.appointmentNumber}`);
+    doc.text(`Token Number: ${appointment.tokenNumber}`);
+    doc.text(`Patient Name: ${appointment.patient ? appointment.patient.name : 'N/A'}`);
+    doc.text(`Doctor Name: Dr. ${appointment.doctor ? appointment.doctor.name : 'N/A'}`);
+    doc.text(`Hospital: ${appointment.hospital ? appointment.hospital.name : 'N/A'}`);
+    doc.text(`Date: ${appointment.date}`);
+    doc.text(`Time Slot: ${appointment.timeSlot}`);
+    doc.text(`Status: ${appointment.status}`);
+    doc.moveDown();
+
+    // QR Code
+    const qrData = JSON.stringify({
+      appointmentNumber: appointment.appointmentNumber,
+      tokenNumber: appointment.tokenNumber,
+      date: appointment.date,
+      timeSlot: appointment.timeSlot,
+      status: appointment.status
+    });
+
+    const qrCodeUrl = await QRCode.toDataURL(qrData);
+    doc.text('Scan to Verify Receipt:', { align: 'left' });
+    doc.image(qrCodeUrl, { fit: [150, 150], align: 'center' });
+
+    doc.end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const downloadPrescriptionPDF = async (req, res, next) => {
+  try {
+    const record = await MedicalRecord.findByPk(req.params.id, {
+      include: [
+        { model: User, as: 'patient', attributes: ['name', 'gender'] },
+        { model: User, as: 'doctor', attributes: ['name'] },
+        { model: Appointment, as: 'appointment', attributes: ['appointmentNumber'] }
+      ]
+    });
+
+    if (!record) {
+      return res.status(404).json({ success: false, message: 'Medical Record not found' });
+    }
+
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=prescription_${record.id}.pdf`);
+    doc.pipe(res);
+
+    doc.fontSize(20).text('Medical Prescription', { align: 'center' });
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Patient Name: ${record.patient ? record.patient.name : 'N/A'}`);
+    doc.text(`Doctor Name: Dr. ${record.doctor ? record.doctor.name : 'N/A'}`);
+    doc.text(`Appointment Number: ${record.appointment ? record.appointment.appointmentNumber : 'N/A'}`);
+    doc.text(`Diagnosis: ${record.diagnosis}`);
+    doc.moveDown();
+
+    doc.text('Prescription Details:', { underline: true });
+    
+    let parsedPrescription = record.prescription;
+    if (typeof parsedPrescription === 'string') {
+      try {
+        parsedPrescription = JSON.parse(parsedPrescription);
+      } catch (e) {
+        parsedPrescription = [];
+      }
+    }
+    
+    if (Array.isArray(parsedPrescription) && parsedPrescription.length > 0) {
+      parsedPrescription.forEach((item, index) => {
+        doc.text(`${index + 1}. ${item.medication || item.name} - ${item.dosage || ''} (${item.frequency || ''})`);
+      });
+    } else {
+      doc.text(typeof record.prescription === 'string' ? record.prescription : 'No medications listed.');
+    }
+
+    doc.moveDown();
+    if (record.notes) {
+      doc.text(`Notes: ${record.notes}`);
+    }
+
+    doc.end();
   } catch (error) {
     next(error);
   }

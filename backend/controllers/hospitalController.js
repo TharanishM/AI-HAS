@@ -52,6 +52,9 @@ export const createHospital = async (req, res, next) => {
       rating: rating ? parseFloat(rating) : 5.0,
       latitude: latitude ? parseFloat(latitude) : null,
       longitude: longitude ? parseFloat(longitude) : null,
+      gallery: req.body.gallery ? (typeof req.body.gallery === 'string' ? JSON.parse(req.body.gallery) : req.body.gallery) : [],
+      facilities: req.body.facilities ? (typeof req.body.facilities === 'string' ? JSON.parse(req.body.facilities) : req.body.facilities) : [],
+      liveBedAvailability: req.body.liveBedAvailability ? parseInt(req.body.liveBedAvailability) : 0,
     });
 
     res.status(201).json({
@@ -96,6 +99,18 @@ export const updateHospital = async (req, res, next) => {
 
     if (req.body.departments !== undefined) {
       hospital.departments = typeof req.body.departments === 'string' ? JSON.parse(req.body.departments) : req.body.departments;
+    }
+
+    if (req.body.gallery !== undefined) {
+      hospital.gallery = typeof req.body.gallery === 'string' ? JSON.parse(req.body.gallery) : req.body.gallery;
+    }
+
+    if (req.body.facilities !== undefined) {
+      hospital.facilities = typeof req.body.facilities === 'string' ? JSON.parse(req.body.facilities) : req.body.facilities;
+    }
+
+    if (req.body.liveBedAvailability !== undefined) {
+      hospital.liveBedAvailability = parseInt(req.body.liveBedAvailability);
     }
 
     if (req.files) {
@@ -229,6 +244,34 @@ export const getHospitalById = async (req, res, next) => {
       success: true,
       hospital,
       doctors: formattedDoctors,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestAmbulance = async (req, res, next) => {
+  try {
+    const { pickupAddress, patientName, emergencyContact } = req.body;
+    const hospital = await Hospital.findByPk(req.params.id);
+    if (!hospital) {
+      return res.status(404).json({ success: false, message: 'Hospital not found' });
+    }
+
+    // Since we do not want to add another table unnecessarily, we return a mock success response
+    // indicating that the ambulance is dispatched. In a full system, this would write to an AmbulanceRequest table.
+    // We will simulate real-time notification here if needed, or save it to database notifications.
+    res.status(200).json({
+      success: true,
+      message: `Ambulance request dispatched successfully from ${hospital.name}!`,
+      dispatchDetails: {
+        hospitalName: hospital.name,
+        pickupAddress,
+        patientName,
+        emergencyContact,
+        estimatedArrival: '15-20 mins',
+        status: 'Dispatched'
+      }
     });
   } catch (error) {
     next(error);

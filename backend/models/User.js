@@ -48,6 +48,18 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       defaultValue: '',
     },
+    twoFactorSecret: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    isTwoFactorEnabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    loginHistory: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
   },
   {
     hooks: {

@@ -38,6 +38,9 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await API.post('/auth/login', { email, password });
+      if (res.data.requires2FA) {
+        return { requires2FA: true, userId: res.data.userId };
+      }
       if (res.data.success) {
         localStorage.setItem('token', res.data.token);
         setUser(res.data.user);
@@ -47,6 +50,26 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Login failed';
+      addToast(msg, 'error');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verify2FALogin = async (userId, token) => {
+    setLoading(true);
+    try {
+      const res = await API.post('/auth/2fa/verify-login', { userId, token });
+      if (res.data.success) {
+        localStorage.setItem('token', res.data.token);
+        setUser(res.data.user);
+        setProfile(res.data.profile);
+        addToast(`Welcome back, ${res.data.user.name}!`, 'success');
+        return res.data.user;
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Invalid 2FA code';
       addToast(msg, 'error');
       throw err;
     } finally {
@@ -104,6 +127,7 @@ export const AuthProvider = ({ children }) => {
         profile,
         loading,
         login,
+        verify2FALogin,
         register,
         logout,
         updateProfile,

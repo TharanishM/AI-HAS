@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Calendar as CalendarIcon, Clock, Heart, Briefcase, FileText, CheckCircle2, FileDown } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { CardSkeleton } from '../../components/LoadingSkeleton';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const BookAppointment = () => {
   const { doctorId } = useParams();
@@ -318,85 +319,111 @@ const BookAppointment = () => {
         </div>
       )}
 
-      {}
-      {showSuccessModal && bookedApptDetails && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-          <GlassCard className="w-full max-w-lg flex flex-col gap-5 border border-white/20 p-6 shadow-2xl relative">
-            <div className="text-center flex flex-col items-center gap-2">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-2xl shadow-xl shadow-emerald-500/20">
-                ✓
-              </div>
-              <h2 className="text-xl font-extrabold text-slate-800 dark:text-white mt-2">
-                Appointment Booked Successfully
-              </h2>
-            </div>
+      <AnimatePresence>
+        {showSuccessModal && bookedApptDetails && (
+          <div className="fixed inset-0 z-55 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="w-full max-w-lg"
+            >
+              <GlassCard className="flex flex-col gap-5 border border-white/20 p-6 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                
+                <div className="text-center flex flex-col items-center gap-2">
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: 'spring', stiffness: 500, damping: 15 }}
+                    className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-2xl shadow-xl shadow-emerald-500/20"
+                  >
+                    ✓
+                  </motion.div>
+                  <h2 className="text-xl font-extrabold text-slate-800 dark:text-white mt-2">
+                    Appointment Booked Successfully
+                  </h2>
+                </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
-              <div className="flex justify-between border-b pb-2 dark:border-slate-800">
-                <span className="font-semibold">Appointment Number</span>
-                <span className="font-bold text-slate-800 dark:text-white font-mono">{bookedApptDetails.appointmentNumber}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 dark:border-slate-800">
-                <span className="font-semibold">Token Number</span>
-                <span className="font-black text-brand-500 text-lg">{bookedApptDetails.tokenNumber}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 dark:border-slate-800">
-                <span className="font-semibold">Hospital Name</span>
-                <span className="font-bold text-slate-800 dark:text-white">{bookedApptDetails.hospital?.name || doctor.hospital?.name || 'Clinic'}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 dark:border-slate-800">
-                <span className="font-semibold">Doctor Name</span>
-                <span className="font-bold text-slate-800 dark:text-white">Dr. {doctor.userId.name}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 dark:border-slate-800">
-                <span className="font-semibold">Department</span>
-                <span className="font-bold text-slate-800 dark:text-white">{doctor.departmentId.name}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 dark:border-slate-800">
-                <span className="font-semibold">Appointment Date</span>
-                <span className="font-bold text-slate-800 dark:text-white">{new Date(bookedApptDetails.date).toLocaleDateString('en-GB')}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 dark:border-slate-800">
-                <span className="font-semibold">Time Slot</span>
-                <span className="font-bold text-slate-800 dark:text-white">{bookedApptDetails.timeSlot}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Consultation Fee</span>
-                <span className="font-bold text-emerald-600">₹ {doctor.fees}</span>
-              </div>
-            </div>
+                <div className="bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-3 text-xs text-slate-600 dark:text-slate-400">
+                  <div className="flex justify-between border-b pb-2 dark:border-slate-800">
+                    <span className="font-semibold">Appointment Number</span>
+                    <span className="font-bold text-slate-800 dark:text-white font-mono">{bookedApptDetails.appointmentNumber}</span>
+                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex justify-between border-b pb-2 dark:border-slate-800 items-center"
+                  >
+                    <span className="font-semibold">Token Number</span>
+                    <span className="font-black text-brand-500 text-lg bg-brand-500/10 px-2 py-0.5 rounded-lg">{bookedApptDetails.tokenNumber}</span>
+                  </motion.div>
+                  <div className="flex justify-between border-b pb-2 dark:border-slate-800">
+                    <span className="font-semibold">Hospital Name</span>
+                    <span className="font-bold text-slate-800 dark:text-white">{bookedApptDetails.hospital?.name || doctor.hospital?.name || 'Clinic'}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2 dark:border-slate-800">
+                    <span className="font-semibold">Doctor Name</span>
+                    <span className="font-bold text-slate-800 dark:text-white">Dr. {doctor.userId.name}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2 dark:border-slate-800">
+                    <span className="font-semibold">Department</span>
+                    <span className="font-bold text-slate-800 dark:text-white">{doctor.departmentId.name}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2 dark:border-slate-800">
+                    <span className="font-semibold">Appointment Date</span>
+                    <span className="font-bold text-slate-800 dark:text-white">{new Date(bookedApptDetails.date).toLocaleDateString('en-GB')}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2 dark:border-slate-800">
+                    <span className="font-semibold">Time Slot</span>
+                    <span className="font-bold text-slate-800 dark:text-white">{bookedApptDetails.timeSlot}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Consultation Fee</span>
+                    <span className="font-bold text-emerald-600">₹ {doctor.fees}</span>
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-2 mt-2">
-              <button
-                onClick={() => handleDownloadReceipt(bookedApptDetails)}
-                className="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20"
-              >
-                <FileDown className="w-4 h-4" /> Download Receipt (PDF)
-              </button>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => {
-                    setShowSuccessModal(false);
-                    navigate('/patient');
-                  }}
-                  className="py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 font-bold rounded-xl text-xs"
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex flex-col gap-2 mt-2"
                 >
-                  My Appointments
-                </button>
-                <button
-                  onClick={() => {
-                    setShowSuccessModal(false);
-                    navigate('/patient/hospitals');
-                  }}
-                  className="py-2.5 bg-slate-900 text-white hover:bg-slate-950 rounded-xl text-xs font-bold"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-      )}
+                  <button
+                    onClick={() => handleDownloadReceipt(bookedApptDetails)}
+                    className="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20"
+                  >
+                    <FileDown className="w-4 h-4" /> Download Receipt (PDF)
+                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setShowSuccessModal(false);
+                        navigate('/patient');
+                      }}
+                      className="py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 font-bold rounded-xl text-xs"
+                    >
+                      My Appointments
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSuccessModal(false);
+                        navigate('/patient/hospitals');
+                      }}
+                      className="py-2.5 bg-slate-900 text-white hover:bg-slate-950 rounded-xl text-xs font-bold"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </motion.div>
+              </GlassCard>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -14,6 +14,7 @@ const PatientDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [aiHistory, setAiHistory] = useState([]);
+  const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -21,6 +22,7 @@ const PatientDashboard = () => {
       const appointmentsRes = await API.get('/appointments');
       const recordsRes = await API.get('/appointments/medical-records');
       const aiRes = await API.get('/ai/history');
+      const billsRes = await API.get('/payments/history');
 
       if (appointmentsRes.data.success) {
         setAppointments(appointmentsRes.data.appointments);
@@ -30,6 +32,9 @@ const PatientDashboard = () => {
       }
       if (aiRes.data.success) {
         setAiHistory(aiRes.data.history);
+      }
+      if (billsRes.data.success) {
+        setBills(billsRes.data.bills || billsRes.data.payments || []);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -41,6 +46,72 @@ const PatientDashboard = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handlePayBill = async (billId, amount) => {
+    try {
+      // 1. Create order on backend
+      const orderRes = await API.post('/payments/create-order', { billId, amount });
+      if (!orderRes.data.success) {
+        addToast('Failed to initialize payment order', 'error');
+        return;
+      }
+      const { orderId, amount: orderAmount, currency } = orderRes.data;
+
+      // 2. Open Razorpay Checkout Checkout
+      const options = {
+        key: 'rzp_test_dummykey', // Client dummy key placeholder
+        amount: orderAmount,
+        currency,
+        name: 'AI Hospital Appointment System',
+        description: `Billing Payment for invoice #${billId}`,
+        order_id: orderId,
+        handler: async (response) => {
+          try {
+            // Verify payment on backend
+            const verifyRes = await API.post('/payments/verify', {
+              billId,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            if (verifyRes.data.success) {
+              addToast('Payment successful & verified!', 'success');
+              fetchData();
+            } else {
+              addToast('Payment verification failed', 'error');
+            }
+          } catch (err) {
+            addToast('Error during payment verification', 'error');
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+          contact: user.phone || '9999999999',
+        },
+        theme: {
+          color: '#3b82f6',
+        },
+      };
+
+      // Ensure Razorpay SDK is loaded
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => {
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+        document.body.appendChild(script);
+      } else {
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      }
+    } catch (error) {
+      addToast(error.response?.data?.message || 'Error initiating payment', 'error');
+    }
+  };
 
   const handleCancelAppointment = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
@@ -452,6 +523,42 @@ const PatientDashboard = () => {
             >
               Analyze Symptoms Now
             </Link>
+          </GlassCard>
+
+          <GlassCard className="p-4">
+            <h3 className="font-bold text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-2">
+              💳 Payments & Invoices
+            </h3>
+            {bills.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {bills.slice(0, 3).map((bill) => (
+                  <div key={bill._id} className="p-3 bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-800 rounded-xl text-xs flex justify-between items-center">
+                    <div>
+                      <span className="font-semibold text-slate-800 dark:text-white block">
+                        Dr. {bill.doctorId?.name || 'Consultation'}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {new Date(bill.createdAt || bill.billingDate).toLocaleDateString('en-GB')} • ₹{bill.amount}
+                      </span>
+                    </div>
+                    {bill.status === 'Paid' ? (
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 rounded-full font-bold text-[10px]">
+                        Paid
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handlePayBill(bill._id, bill.amount)}
+                        className="px-2.5 py-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg text-[10px] transition-all"
+                      >
+                        Pay Now
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">No invoices pending payment.</p>
+            )}
           </GlassCard>
         </div>
       </div>

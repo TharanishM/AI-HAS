@@ -96,12 +96,30 @@ const AdminDashboard = () => {
             System overview, clinical capabilities, and real-time statistics.
           </p>
         </div>
-        <button
-          onClick={exportReport}
-          className="px-5 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl flex items-center gap-2 shadow-lg shadow-indigo-500/20 text-xs transition-all"
-        >
-          <Download className="w-4 h-4" /> Export Report (.CSV)
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={exportReport}
+            className="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md text-[11px] transition-all"
+          >
+            <Download className="w-3.5 h-3.5" /> CSV
+          </button>
+          <a
+            href="http://localhost:5000/api/admin/reports/export/pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md text-[11px] transition-all"
+          >
+            <Download className="w-3.5 h-3.5" /> PDF Report
+          </a>
+          <a
+            href="http://localhost:5000/api/admin/reports/export/excel"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md text-[11px] transition-all"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Excel Report
+          </a>
+        </div>
       </div>
 
       {}
@@ -195,7 +213,6 @@ const AdminDashboard = () => {
             </div>
           </GlassCard>
 
-          {}
           <GlassCard className="flex items-center gap-4 border-l-4 border-l-violet-500">
             <div className="p-3.5 bg-violet-500/10 text-violet-500 rounded-2xl shrink-0">
               <Star className="w-6 h-6 text-violet-500" />
@@ -205,10 +222,49 @@ const AdminDashboard = () => {
               <span className="text-lg font-black text-slate-800 dark:text-white mt-1 block">{stats.mostConsultedDoctor}</span>
             </div>
           </GlassCard>
+
+           <GlassCard className="flex items-center gap-4 border-l-4 border-l-emerald-500 md:col-span-1 lg:col-span-1">
+             <div className="p-3.5 bg-emerald-500/10 text-emerald-500 rounded-2xl shrink-0">
+               <TrendingUp className="w-6 h-6" />
+             </div>
+             <div>
+               <span className="text-slate-400 dark:text-slate-500 text-xs font-bold block uppercase tracking-wider">Daily Revenue</span>
+               <span className="text-xl font-black text-slate-800 dark:text-white mt-1 block">₹ {stats.revenue?.daily || 0}</span>
+             </div>
+           </GlassCard>
+
+           <GlassCard className="flex items-center gap-4 border-l-4 border-l-brand-500 md:col-span-1 lg:col-span-1">
+             <div className="p-3.5 bg-brand-500/10 text-brand-500 rounded-2xl shrink-0">
+               <TrendingUp className="w-6 h-6" />
+             </div>
+             <div>
+               <span className="text-slate-400 dark:text-slate-500 text-xs font-bold block uppercase tracking-wider">Weekly Revenue</span>
+               <span className="text-xl font-black text-slate-800 dark:text-white mt-1 block">₹ {stats.revenue?.weekly || 0}</span>
+             </div>
+           </GlassCard>
+
+           <GlassCard className="flex items-center gap-4 border-l-4 border-l-indigo-500 md:col-span-1 lg:col-span-1">
+             <div className="p-3.5 bg-indigo-500/10 text-indigo-500 rounded-2xl shrink-0">
+               <TrendingUp className="w-6 h-6" />
+             </div>
+             <div>
+               <span className="text-slate-400 dark:text-slate-500 text-xs font-bold block uppercase tracking-wider">Monthly Revenue</span>
+               <span className="text-xl font-black text-slate-800 dark:text-white mt-1 block">₹ {stats.revenue?.monthly || 0}</span>
+             </div>
+           </GlassCard>
+
+           <GlassCard className="flex items-center gap-4 border-l-4 border-l-teal-500 md:col-span-1 lg:col-span-1">
+             <div className="p-3.5 bg-teal-500/10 text-teal-500 rounded-2xl shrink-0">
+               <TrendingUp className="w-6 h-6" />
+             </div>
+             <div>
+               <span className="text-slate-400 dark:text-slate-500 text-xs font-bold block uppercase tracking-wider">Overall Revenue</span>
+               <span className="text-xl font-black text-slate-800 dark:text-white mt-1 block">₹ {stats.revenue?.overall || 0}</span>
+             </div>
+           </GlassCard>
         </div>
       )}
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {}
         {stats && (

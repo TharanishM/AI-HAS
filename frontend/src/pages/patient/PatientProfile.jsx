@@ -44,10 +44,16 @@ const PatientProfile = () => {
     address: profile?.address || '',
     allergies: formatArrayToString(profile?.allergies),
     medicalHistory: formatArrayToString(profile?.medicalHistory),
+    familyMembers: profile?.familyMembers ? (Array.isArray(profile.familyMembers) ? profile.familyMembers.join(', ') : profile.familyMembers) : '',
+    insuranceInfo: profile?.insuranceInfo ? (typeof profile.insuranceInfo === 'object' ? JSON.stringify(profile.insuranceInfo) : profile.insuranceInfo) : '',
   });
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [qrCode2FA, setQrCode2FA] = useState('');
+  const [verify2FACode, setVerify2FACode] = useState('');
 
   useEffect(() => {
     if (user || profile) {
@@ -60,6 +66,8 @@ const PatientProfile = () => {
         address: profile?.address || '',
         allergies: formatArrayToString(profile?.allergies),
         medicalHistory: formatArrayToString(profile?.medicalHistory),
+        familyMembers: profile?.familyMembers ? (Array.isArray(profile.familyMembers) ? profile.familyMembers.join(', ') : profile.familyMembers) : '',
+        insuranceInfo: profile?.insuranceInfo ? (typeof profile.insuranceInfo === 'object' ? JSON.stringify(profile.insuranceInfo) : profile.insuranceInfo) : '',
       });
     }
   }, [user, profile]);
@@ -103,6 +111,15 @@ const PatientProfile = () => {
     e.preventDefault();
     setSaving(true);
     try {
+      let parsedInsurance = {};
+      if (formData.insuranceInfo) {
+        try {
+          parsedInsurance = typeof formData.insuranceInfo === 'string' ? JSON.parse(formData.insuranceInfo) : formData.insuranceInfo;
+        } catch (e) {
+          parsedInsurance = { provider: formData.insuranceInfo };
+        }
+      }
+
       const payload = {
         ...formData,
         allergies: typeof formData.allergies === 'string'
@@ -111,6 +128,10 @@ const PatientProfile = () => {
         medicalHistory: typeof formData.medicalHistory === 'string'
           ? formData.medicalHistory.split(',').map((m) => m.trim()).filter(Boolean)
           : [],
+        familyMembers: typeof formData.familyMembers === 'string'
+          ? formData.familyMembers.split(',').map((f) => f.trim()).filter(Boolean)
+          : [],
+        insuranceInfo: parsedInsurance,
       };
 
       await updateProfile(payload);
@@ -168,6 +189,85 @@ const PatientProfile = () => {
                 Uploading avatar...
               </span>
             )}
+
+            <div className="w-full border-t border-slate-100 dark:border-slate-800 mt-6 pt-6 flex flex-col gap-4 text-left">
+              <h4 className="font-bold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Security Settings
+              </h4>
+              <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 p-3.5 rounded-xl border dark:border-slate-800">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-white block">
+                    Two-Factor Auth (2FA)
+                  </span>
+                  <span className="text-[10px] text-slate-450 mt-0.5 block font-normal">
+                    Secure login verification
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (user.isTwoFactorEnabled) {
+                      if (window.confirm('Disable 2FA?')) {
+                        const res = await API.post('/auth/2fa/disable');
+                        if (res.data.success) {
+                          setUser({ ...user, isTwoFactorEnabled: false });
+                          addToast('2FA disabled', 'info');
+                        }
+                      }
+                    } else {
+                      const res = await API.post('/auth/2fa/enable');
+                      if (res.data.success) {
+                        setQrCode2FA(res.data.qrCode);
+                        setShow2FASetup(true);
+                      }
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all ${
+                    user.isTwoFactorEnabled
+                      ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-md shadow-rose-500/20'
+                      : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                  }`}
+                >
+                  {user.isTwoFactorEnabled ? 'Disable' : 'Enable'}
+                </button>
+              </div>
+
+              {show2FASetup && (
+                <div className="flex flex-col gap-3 p-4 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-xl border border-indigo-100 dark:border-indigo-950">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-450 leading-relaxed font-normal block">
+                    Scan QR code with Google Authenticator or any 2FA app, then enter the verification code below:
+                  </span>
+                  <img src={qrCode2FA} alt="2FA QR Code" className="w-32 h-32 mx-auto rounded-lg" />
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="Verification code"
+                    value={verify2FACode}
+                    onChange={(e) => setVerify2FACode(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg text-center font-mono tracking-widest text-slate-800 dark:text-white border dark:border-slate-800 bg-white dark:bg-slate-900 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const res = await API.post('/auth/2fa/verify', { token: verify2FACode });
+                        if (res.data.success) {
+                          setUser({ ...user, isTwoFactorEnabled: true });
+                          setShow2FASetup(false);
+                          setVerify2FACode('');
+                          addToast('2FA setup complete and enabled!', 'success');
+                        }
+                      } catch (err) {
+                        addToast('Invalid 2FA token', 'error');
+                      }
+                    }}
+                    className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-[10px] transition-all shadow-md shadow-emerald-500/10"
+                  >
+                    Confirm & Verify
+                  </button>
+                </div>
+              )}
+            </div>
           </GlassCard>
         </div>
 
@@ -313,6 +413,42 @@ const PatientProfile = () => {
                     onChange={handleChange}
                     className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                     placeholder="e.g. Asthma, Hypertension"
+                  />
+                </div>
+              </div>
+
+              {}
+              <div className="flex flex-col gap-1.5 md:col-span-2">
+                <label>Family Members (comma-separated)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <User className="w-4 h-4 text-indigo-500" />
+                  </span>
+                  <input
+                    type="text"
+                    name="familyMembers"
+                    value={formData.familyMembers}
+                    onChange={handleChange}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    placeholder="e.g. Mother, Father, Child"
+                  />
+                </div>
+              </div>
+
+              {}
+              <div className="flex flex-col gap-1.5 md:col-span-2">
+                <label>Insurance Provider / Details (JSON or Provider Name)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <User className="w-4 h-4 text-emerald-500" />
+                  </span>
+                  <input
+                    type="text"
+                    name="insuranceInfo"
+                    value={formData.insuranceInfo}
+                    onChange={handleChange}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    placeholder='e.g. {"provider": "Star Health", "policyNo": "12345"}'
                   />
                 </div>
               </div>

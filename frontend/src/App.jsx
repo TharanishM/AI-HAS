@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { Activity } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -34,16 +35,43 @@ import AdminApprovals from './pages/admin/AdminApprovals';
 import AdminPatients from './pages/admin/AdminPatients';
 import AdminBills from './pages/admin/AdminBills';
 import AdminMedicalRecords from './pages/admin/AdminMedicalRecords';
+const GlobalLoader = () => {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 overflow-hidden relative">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.08)_0%,transparent_70%)] animate-pulse"></div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className="flex flex-col items-center gap-6 z-10"
+      >
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-brand-500/20 blur-xl animate-pulse"></div>
+          <div className="w-24 h-24 bg-white dark:bg-slate-900 border border-brand-500/20 rounded-3xl flex items-center justify-center shadow-2xl relative">
+            <Activity className="w-12 h-12 text-brand-500 animate-bounce" />
+          </div>
+        </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-1.5 justify-center">
+            BookMy<span className="text-brand-500">Doctor</span>
+          </h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+            Connecting Care Seamlessly...
+          </p>
+        </div>
+        <div className="w-48 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+          <div className="absolute top-0 bottom-0 bg-brand-500 rounded-full animate-loading" style={{ width: '40%' }}></div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <GlobalLoader />;
   }
 
   if (!user) {
@@ -64,11 +92,7 @@ const RootRedirect = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <GlobalLoader />;
   }
 
   if (!user) return <Navigate to="/role-selection" replace />;
@@ -85,7 +109,14 @@ const MainLayout = ({ children }) => {
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 p-6 md:p-8 max-w-6xl mx-auto w-full overflow-x-hidden">
-          {children}
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.99 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+          >
+            {children}
+          </motion.div>
         </main>
       </div>
     </div>

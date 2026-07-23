@@ -203,6 +203,25 @@ export const login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    // Append Login History
+    const history = user.loginHistory || [];
+    history.push({
+      ip: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
+      userAgent: req.headers['user-agent'] || 'Unknown',
+      timestamp: new Date()
+    });
+    user.loginHistory = history;
+    await user.save();
+
+    if (user.isTwoFactorEnabled) {
+      // Prompt client for 2FA instead of sending JWT immediately
+      return res.status(200).json({
+        success: true,
+        requires2FA: true,
+        userId: user.id
+      });
+    }
+
     let extraProfile = null;
     if (user.role === 'Patient') {
       extraProfile = await Patient.findOne({ where: { userId: user.id } });
@@ -304,6 +323,8 @@ export const updateProfile = async (req, res, next) => {
         if (extraData.address) extraProfile.address = extraData.address;
         if (extraData.allergies) extraProfile.allergies = extraData.allergies;
         if (extraData.medicalHistory) extraProfile.medicalHistory = extraData.medicalHistory;
+        if (extraData.familyMembers) extraProfile.familyMembers = extraData.familyMembers;
+        if (extraData.insuranceInfo) extraProfile.insuranceInfo = extraData.insuranceInfo;
         await extraProfile.save();
       }
     } else if (user.role === 'Doctor') {
@@ -437,5 +458,109 @@ export const refreshToken = async (req, res, next) => {
     res.status(200).json({ success: true, token: newToken });
   } catch (error) {
     res.status(401).json({ success: false, message: 'Invalid or expired session token' });
+  }
+};
+
+import { TOTP } from 'otplib';
+import QRCode from 'qrcode';
+
+export const enable2FA = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const totp = new TOTP();
+    const secret = totp.generateSecret();
+    user.twoFactorSecret = secret;
+    await user.save();
+
+    const otpAuthUrl = totp.generateURI({ issuer: 'AI Hospital System', label: user.email, secret });
+    const qrCodeDataUrl = await QRCode.toDataURL(otpAuthUrl);
+
+    res.status(200).json({
+      success: true,
+      secret,
+      qrCode: qrCodeDataUrl
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const disable2FA = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    user.isTwoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    await user.save();
+
+    res.status(200).json({ success: true, message: '2FA disabled successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verify2FA = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const totp = new TOTP();
+    const isValid = totp.verifySync({ token, secret: user.twoFactorSecret });
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid 2FA token' });
+    }
+
+    user.isTwoFactorEnabled = true;
+    await user.save();
+
+    res.status(200).json({ success: true, message: '2FA enabled and verified successfully!' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verify2FALogin = async (req, res, next) => {
+  try {
+    const { userId, token } = req.body;
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const totp = new TOTP();
+    const isValid = totp.verifySync({ token, secret: user.twoFactorSecret });
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid 2FA token' });
+    }
+
+    let extraProfile = null;
+    if (user.role === 'Patient') {
+      extraProfile = await Patient.findOne({ where: { userId: user.id } });
+    } else if (user.role === 'Doctor') {
+      const docProfile = await Doctor.findOne({
+        where: { userId: user.id },
+        include: ['department']
+      });
+      extraProfile = formatDoctorProfile(docProfile);
+    }
+
+    res.status(200).json({
+      success: true,
+      token: generateToken(user.id),
+      user: {
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        gender: user.gender,
+        avatar: user.avatar,
+      },
+      profile: extraProfile
+    });
+  } catch (error) {
+    next(error);
   }
 };
