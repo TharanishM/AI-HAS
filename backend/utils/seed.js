@@ -9,6 +9,7 @@ import Notification from '../models/Notification.js';
 import MedicalRecord from '../models/MedicalRecord.js';
 import AIHistory from '../models/AIHistory.js';
 import Hospital from '../models/Hospital.js';
+import Bill from '../models/Bill.js';
 
 dotenv.config();
 
@@ -37,17 +38,17 @@ const seedDB = async () => {
     console.log('Syncing database models...');
     await sequelize.sync({ alter: true });
     
-    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0;');
-    await User.destroy({ where: {} });
+    // Clean tables in reverse dependency order to avoid foreign key errors
+    await Bill.destroy({ where: {} });
+    await AIHistory.destroy({ where: {} });
+    await Notification.destroy({ where: {} });
+    await MedicalRecord.destroy({ where: {} });
+    await Appointment.destroy({ where: {} });
     await Patient.destroy({ where: {} });
     await Doctor.destroy({ where: {} });
-    await Department.destroy({ where: {} });
     await Hospital.destroy({ where: {} });
-    await Appointment.destroy({ where: {} });
-    await MedicalRecord.destroy({ where: {} });
-    await Notification.destroy({ where: {} });
-    await AIHistory.destroy({ where: {} });
-    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1;');
+    await Department.destroy({ where: {} });
+    await User.destroy({ where: {} });
     console.log('Database cleaned.');
 
     const createdDepts = await Department.bulkCreate(departments);

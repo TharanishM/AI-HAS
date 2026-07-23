@@ -34,7 +34,7 @@ const initDB = async () => {
   await connectDB();
   try {
     await sequelize.sync({ alter: true });
-    console.log('Database models synchronized with MySQL successfully.');
+   console.log('Database models synchronized with PostgreSQL successfully.');
   } catch (error) {
     console.error('Error syncing database models:', error);
   }
