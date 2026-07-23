@@ -54,6 +54,7 @@ const Bill = sequelize.define('Bill', {
   billingDate: {
     type: DataTypes.DATEONLY,
     allowNull: false,
+  },
   razorpayOrderId: {
     type: DataTypes.STRING,
     allowNull: true,

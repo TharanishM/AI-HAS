@@ -24,6 +24,7 @@ import {
   getAllMedicalRecordsAdmin,
   createMedicalRecordAdmin,
   updateMedicalRecordAdmin,
+  deleteMedicalRecordAdmin,
   exportReportExcel,
   exportReportPDF,
 } from '../controllers/adminController.js';
