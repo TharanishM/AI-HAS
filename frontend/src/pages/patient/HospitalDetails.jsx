@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { MapPin, Phone, Clock, Star, Search, ShieldAlert, Heart, Calendar, Building } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { CardSkeleton } from '../../components/LoadingSkeleton';
@@ -59,7 +59,7 @@ const HospitalDetails = () => {
         <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800">
           {hospital.banner ? (
             <img
-              src={`http://localhost:5000${hospital.banner}`}
+              src={`${BACKEND_URL}${hospital.banner}`}
               alt={hospital.name}
               className="w-full h-full object-cover"
             />
@@ -76,7 +76,7 @@ const HospitalDetails = () => {
             <div className="w-20 h-20 rounded-2xl bg-white dark:bg-slate-900 p-1 shadow-2xl shrink-0 border border-white/20 overflow-hidden flex items-center justify-center">
               {hospital.logo ? (
                 <img
-                  src={`http://localhost:5000${hospital.logo}`}
+                  src={`${BACKEND_URL}${hospital.logo}`}
                   alt="logo"
                   className="w-full h-full object-cover rounded-xl"
                 />
@@ -156,7 +156,7 @@ const HospitalDetails = () => {
 
               <div className="flex gap-2 w-full sm:w-auto shrink-0">
                 <div className="relative flex-1 sm:flex-initial">
-                  <Search className="absolute inset-y-0 left-3 flex items-center text-slate-400 w-4 h-4 mt-3" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
                   <input
                     type="text"
                     value={docSearch}
@@ -189,7 +189,7 @@ const HospitalDetails = () => {
                     <div className="flex gap-4 items-center">
                       {doc.user?.avatar ? (
                         <img
-                          src={`http://localhost:5000${doc.user.avatar}`}
+                          src={`${BACKEND_URL}${doc.user.avatar}`}
                           alt={doc.user.name}
                           className="w-14 h-14 rounded-2xl object-cover shrink-0"
                         />
@@ -210,7 +210,7 @@ const HospitalDetails = () => {
                     </div>
 
                     <Link
-                      to={`/patient/book/${doc.userId}?hospitalId=${hospital.id}`}
+                      to={`/book-appointment/${doc.userId}?hospitalId=${hospital.id}`}
                       className="p-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-md flex items-center justify-center"
                       title="Book Appointment"
                     >

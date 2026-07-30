@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Bot, Send, User, ShieldAlert, Heart, Calendar, ArrowRight, Activity, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -187,7 +187,7 @@ const AIAssistant = () => {
                                 <div className="flex items-center gap-2.5">
                                   {doc.userId.avatar ? (
                                     <img
-                                      src={`http://localhost:5000${doc.userId.avatar}`}
+                                      src={`${BACKEND_URL}${doc.userId.avatar}`}
                                       alt={doc.userId.name}
                                       className="w-10 h-10 rounded-xl object-cover"
                                     />
@@ -204,7 +204,7 @@ const AIAssistant = () => {
                                   </div>
                                 </div>
                                 <button
-                                  onClick={() => navigate(`/patient/book/${doc.userId._id}`)}
+                                  onClick={() => navigate(`/book-appointment/${doc.userId._id}`)}
                                   className="p-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-brand-950/20 dark:text-brand-400 rounded-lg transition-all"
                                   title="Book appointment"
                                 >

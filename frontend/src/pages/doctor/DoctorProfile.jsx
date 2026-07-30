@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { User, Phone, Briefcase, FileText, IndianRupee, Save, Upload, BookOpen } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 
@@ -125,7 +125,7 @@ const DoctorProfile = () => {
             <div className="relative group">
               {user.avatar ? (
                 <img
-                  src={`http://localhost:5000${user.avatar}`}
+                  src={`${BACKEND_URL}${user.avatar}`}
                   alt={user.name}
                   className="w-28 h-28 rounded-3xl object-cover border-4 border-brand-500/25"
                 />
@@ -166,7 +166,7 @@ const DoctorProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Full Name</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <User className="w-4 h-4" />
                   </span>
                   <input
@@ -175,7 +175,7 @@ const DoctorProfile = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -184,7 +184,7 @@ const DoctorProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Phone Number</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Phone className="w-4 h-4" />
                   </span>
                   <input
@@ -193,7 +193,7 @@ const DoctorProfile = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -202,7 +202,7 @@ const DoctorProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Medical Specialization</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <BookOpen className="w-4 h-4" />
                   </span>
                   <input
@@ -211,7 +211,7 @@ const DoctorProfile = () => {
                     name="specialization"
                     value={formData.specialization}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                     placeholder="e.g. Heart Rhythm Management"
                   />
                 </div>
@@ -221,7 +221,7 @@ const DoctorProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Experience (Years)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Briefcase className="w-4 h-4" />
                   </span>
                   <input
@@ -230,7 +230,7 @@ const DoctorProfile = () => {
                     name="experience"
                     value={formData.experience}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -239,7 +239,7 @@ const DoctorProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Consultation Fees (₹)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-emerald-500">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 flex items-center pointer-events-none">
                     <IndianRupee className="w-4 h-4" />
                   </span>
                   <input
@@ -248,7 +248,7 @@ const DoctorProfile = () => {
                     name="fees"
                     value={formData.fees}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -272,7 +272,7 @@ const DoctorProfile = () => {
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label>Qualifications (comma-separated)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <FileText className="w-4 h-4" />
                   </span>
                   <input
@@ -281,7 +281,7 @@ const DoctorProfile = () => {
                     name="qualifications"
                     value={formData.qualifications}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                     placeholder="e.g. MD - Harvard, FACC"
                   />
                 </div>

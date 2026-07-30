@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { Calendar as CalendarIcon, Clock, Heart, Briefcase, FileText, CheckCircle2, FileDown } from 'lucide-react';
@@ -202,7 +202,7 @@ const BookAppointment = () => {
             <GlassCard hoverEffect={false} className="text-center p-6 flex flex-col items-center">
               {doctor.userId.avatar ? (
                 <img
-                  src={`http://localhost:5000${doctor.userId.avatar}`}
+                  src={`${BACKEND_URL}${doctor.userId.avatar}`}
                   alt={doctor.userId.name}
                   className="w-24 h-24 rounded-2xl object-cover border-2 border-brand-500/20 mb-4"
                 />
@@ -402,7 +402,7 @@ const BookAppointment = () => {
                     <button
                       onClick={() => {
                         setShowSuccessModal(false);
-                        navigate('/patient');
+                        navigate('/dashboard');
                       }}
                       className="py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 font-bold rounded-xl text-xs"
                     >
@@ -411,7 +411,7 @@ const BookAppointment = () => {
                     <button
                       onClick={() => {
                         setShowSuccessModal(false);
-                        navigate('/patient/hospitals');
+                        navigate('/hospitals');
                       }}
                       className="py-2.5 bg-slate-900 text-white hover:bg-slate-950 rounded-xl text-xs font-bold"
                     >

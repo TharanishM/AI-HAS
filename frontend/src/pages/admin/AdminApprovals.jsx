@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Check, X, ShieldAlert, Heart, Building2, Layers, Clock } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
@@ -87,7 +87,7 @@ const AdminApprovals = () => {
                         <div className="flex items-start gap-4">
                           <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                             {doc.user?.avatar ? (
-                              <img src={`http://localhost:5000${doc.user.avatar}`} alt={doc.user?.name} className="w-full h-full object-cover" />
+                               <img src={`${BACKEND_URL}${doc.user.avatar}`} alt={doc.user?.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center font-bold text-brand-500 text-xl">
                                 {doc.user?.name?.[0]}

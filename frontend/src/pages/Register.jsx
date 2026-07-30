@@ -28,7 +28,7 @@ const Register = () => {
     setLoadingLocal(true);
     try {
       await register(formData);
-      navigate('/patient');
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
     } finally {
@@ -60,7 +60,7 @@ const Register = () => {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Full Name</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                 <User className="w-5 h-5" />
               </span>
               <input
@@ -69,7 +69,7 @@ const Register = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
                 placeholder="John Doe"
               />
             </div>
@@ -79,7 +79,7 @@ const Register = () => {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Email Address</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                 <Mail className="w-5 h-5" />
               </span>
               <input
@@ -88,7 +88,7 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
                 placeholder="john.doe@gmail.com"
               />
             </div>
@@ -98,7 +98,7 @@ const Register = () => {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Password</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                 <Lock className="w-5 h-5" />
               </span>
               <input
@@ -107,7 +107,7 @@ const Register = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
                 placeholder="••••••••"
                 minLength={6}
               />
@@ -118,7 +118,7 @@ const Register = () => {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Phone Number</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                 <Phone className="w-5 h-5" />
               </span>
               <input
@@ -127,7 +127,7 @@ const Register = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
                 placeholder="+1 555 0100"
               />
             </div>
@@ -152,7 +152,7 @@ const Register = () => {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Date of Birth</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                 <Calendar className="w-5 h-5" />
               </span>
               <input
@@ -161,7 +161,7 @@ const Register = () => {
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
               />
             </div>
           </div>
@@ -170,14 +170,14 @@ const Register = () => {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Blood Group</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                 <Heart className="w-5 h-5 text-rose-500" />
               </span>
               <select
                 name="bloodGroup"
                 value={formData.bloodGroup}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
               >
                 {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
                   <option key={bg} value={bg}>{bg}</option>
@@ -190,7 +190,7 @@ const Register = () => {
           <div className="flex flex-col gap-1.5 md:col-span-2">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Residential Address</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                 <MapPin className="w-5 h-5" />
               </span>
               <input
@@ -199,7 +199,7 @@ const Register = () => {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
                 placeholder="123 Medical Blvd, Health City"
               />
             </div>

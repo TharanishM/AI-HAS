@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { User, Phone, MapPin, Calendar, Heart, Save, ShieldAlert, Upload } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 
@@ -158,7 +158,7 @@ const PatientProfile = () => {
             <div className="relative group">
               {user?.avatar ? (
                 <img
-                  src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5000${user.avatar}`}
+                  src={user.avatar.startsWith('http') ? user.avatar : `${BACKEND_URL}${user.avatar}`}
                   alt={user?.name || 'User'}
                   className="w-28 h-28 rounded-3xl object-cover border-4 border-brand-500/25"
                 />
@@ -278,7 +278,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Full Name</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <User className="w-4 h-4" />
                   </span>
                   <input
@@ -287,7 +287,7 @@ const PatientProfile = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -296,7 +296,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Phone Number</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Phone className="w-4 h-4" />
                   </span>
                   <input
@@ -305,7 +305,7 @@ const PatientProfile = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -329,7 +329,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Date of Birth</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Calendar className="w-4 h-4" />
                   </span>
                   <input
@@ -338,7 +338,7 @@ const PatientProfile = () => {
                     name="dateOfBirth"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -347,14 +347,14 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Blood Group</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-rose-500">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 flex items-center pointer-events-none">
                     <Heart className="w-4 h-4 fill-rose-500" />
                   </span>
                   <select
                     name="bloodGroup"
                     value={formData.bloodGroup}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   >
                     {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
                       <option key={bg} value={bg}>{bg}</option>
@@ -367,7 +367,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Residential Address</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <MapPin className="w-4 h-4" />
                   </span>
                   <input
@@ -376,7 +376,7 @@ const PatientProfile = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -385,7 +385,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label>Allergies (comma-separated)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <ShieldAlert className="w-4 h-4 text-amber-500" />
                   </span>
                   <input
@@ -393,7 +393,7 @@ const PatientProfile = () => {
                     name="allergies"
                     value={formData.allergies}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                     placeholder="e.g. Penicillin, Peanuts"
                   />
                 </div>
@@ -403,7 +403,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label>Chronic Conditions / Medical History (comma-separated)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <ShieldAlert className="w-4 h-4 text-brand-500" />
                   </span>
                   <input
@@ -411,7 +411,7 @@ const PatientProfile = () => {
                     name="medicalHistory"
                     value={formData.medicalHistory}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                     placeholder="e.g. Asthma, Hypertension"
                   />
                 </div>
@@ -421,7 +421,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label>Family Members (comma-separated)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <User className="w-4 h-4 text-indigo-500" />
                   </span>
                   <input
@@ -429,7 +429,7 @@ const PatientProfile = () => {
                     name="familyMembers"
                     value={formData.familyMembers}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                     placeholder="e.g. Mother, Father, Child"
                   />
                 </div>
@@ -439,7 +439,7 @@ const PatientProfile = () => {
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label>Insurance Provider / Details (JSON or Provider Name)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <User className="w-4 h-4 text-emerald-500" />
                   </span>
                   <input
@@ -447,7 +447,7 @@ const PatientProfile = () => {
                     name="insuranceInfo"
                     value={formData.insuranceInfo}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-800 dark:text-white"
                     placeholder='e.g. {"provider": "Star Health", "policyNo": "12345"}'
                   />
                 </div>

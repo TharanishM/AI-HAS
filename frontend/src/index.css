@@ -1,24 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --app-bg: #f8fafc;
+  --app-surface: #ffffff;
+  --app-border: rgba(226, 232, 240, 0.85);
+  --app-muted: #64748b;
+  --shadow-panel: 0 18px 45px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 10px 28px rgba(15, 23, 42, 0.05);
+}
+
+.dark {
+  --app-bg: #020617;
+  --app-surface: #0f172a;
+  --app-border: rgba(51, 65, 85, 0.75);
+  --app-muted: #94a3b8;
+  --shadow-panel: 0 18px 45px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
 @layer base {
+  html {
+    @apply bg-slate-50 dark:bg-slate-950;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-slate-950 dark:text-slate-50;
-    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    @apply min-h-screen bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-slate-950 dark:text-slate-50;
+    font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply ring-2 ring-brand-500/40 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
   }
 }
 
-.glass-panel {
-  @apply bg-white/70 dark:bg-slate-900/75 backdrop-blur-md border border-white/20 dark:border-slate-800/50 shadow-xl shadow-slate-100/50 dark:shadow-none;
-}
+@layer components {
+  .glass-panel {
+    @apply border border-slate-200/80 bg-white dark:border-slate-800/80 dark:bg-slate-900;
+    box-shadow: var(--shadow-panel);
+  }
 
-.glass-card {
-  @apply bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border border-white/30 dark:border-slate-800/40 shadow-lg shadow-slate-100/30 dark:shadow-none transition-all duration-300 hover:shadow-xl hover:border-brand-300 dark:hover:border-brand-800;
-}
+  .glass-card {
+    @apply border border-slate-200/80 bg-white dark:border-slate-800/80 dark:bg-slate-900;
+    box-shadow: var(--shadow-card);
+  }
 
-.glass-input {
-  @apply bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm border border-slate-200 dark:border-slate-800 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200 outline-none rounded-xl;
+  .glass-card-interactive {
+    @apply transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg hover:shadow-brand-950/5 dark:hover:border-brand-800 dark:hover:shadow-black/20;
+  }
+
+  .glass-input {
+    @apply min-h-11 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm text-slate-900 transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:placeholder:text-slate-500;
+  }
 }
 
 ::-webkit-scrollbar {
@@ -31,7 +79,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-800 rounded-full hover:bg-slate-400 dark:hover:bg-slate-700;
+  @apply rounded-full bg-slate-300 hover:bg-slate-400 dark:bg-slate-800 dark:hover:bg-slate-700;
 }
 
 @keyframes loading {
@@ -50,8 +98,13 @@
   animation: loading 1.5s infinite ease-in-out;
 }
 
-@keyframes dash {
-  to {
-    stroke-dashoffset: 0;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

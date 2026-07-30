@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -7,13 +7,13 @@ import { motion } from 'framer-motion';
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import MobileDrawer from './components/MobileDrawer';
 
-import RoleSelection from './pages/RoleSelection';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterDoctor from './pages/RegisterDoctor';
 
-import PatientDashboard from './pages/patient/Dashboard';
+import Dashboard from './pages/dashboard/Dashboard';
 import PatientDoctors from './pages/patient/Doctors';
 import BookAppointment from './pages/patient/BookAppointment';
 import AIAssistant from './pages/patient/AIAssistant';
@@ -22,11 +22,10 @@ import PatientProfile from './pages/patient/PatientProfile';
 import Hospitals from './pages/patient/Hospitals';
 import HospitalDetails from './pages/patient/HospitalDetails';
 
-import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import DoctorAvailability from './pages/doctor/DoctorAvailability';
 import DoctorProfile from './pages/doctor/DoctorProfile';
+import DoctorDashboard from './pages/doctor/DoctorDashboard';
 
-import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminDoctors from './pages/admin/AdminDoctors';
 import AdminDepartments from './pages/admin/AdminDepartments';
 import AdminAppointments from './pages/admin/AdminAppointments';
@@ -35,6 +34,7 @@ import AdminApprovals from './pages/admin/AdminApprovals';
 import AdminPatients from './pages/admin/AdminPatients';
 import AdminBills from './pages/admin/AdminBills';
 import AdminMedicalRecords from './pages/admin/AdminMedicalRecords';
+
 const GlobalLoader = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 overflow-hidden relative">
@@ -75,14 +75,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/role-selection" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'Patient') return <Navigate to="/patient" replace />;
-    if (user.role === 'Doctor') return <Navigate to="/doctor" replace />;
-    if (user.role === 'Admin') return <Navigate to="/admin" replace />;
-    return <Navigate to="/role-selection" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -95,25 +92,23 @@ const RootRedirect = () => {
     return <GlobalLoader />;
   }
 
-  if (!user) return <Navigate to="/role-selection" replace />;
-  if (user.role === 'Patient') return <Navigate to="/patient" replace />;
-  if (user.role === 'Doctor') return <Navigate to="/doctor" replace />;
-  if (user.role === 'Admin') return <Navigate to="/admin" replace />;
-  return <Navigate to="/role-selection" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to="/dashboard" replace />;
 };
 
 const MainLayout = ({ children }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
-      <Navbar />
-      <div className="flex flex-1">
+    <div className="min-h-screen overflow-x-hidden bg-slate-50 dark:bg-slate-950">
+      <Navbar onMenuClick={() => setIsDrawerOpen(true)} />
+      <MobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+      <div className="flex min-w-0">
         <Sidebar />
-        <main className="flex-1 p-6 md:p-8 max-w-6xl mx-auto w-full overflow-x-hidden">
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
           <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.99 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            layout
+            className="mx-auto w-full max-w-[1600px] min-w-0"
           >
             {children}
           </motion.div>
@@ -126,25 +121,26 @@ const MainLayout = ({ children }) => {
 const AppContent = () => {
   return (
     <Routes>
-      {}
-      <Route path="/role-selection" element={<RoleSelection />} />
+      {/* Public routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/register-doctor" element={<RegisterDoctor />} />
 
-      {}
+      {/* Shared Authenticated Dashboard */}
       <Route
-        path="/patient"
+        path="/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['Patient']}>
+          <ProtectedRoute>
             <MainLayout>
-              <PatientDashboard />
+              <Dashboard />
             </MainLayout>
           </ProtectedRoute>
         }
       />
+
+      {/* Patient Only Routes */}
       <Route
-        path="/patient/hospitals"
+        path="/hospitals"
         element={
           <ProtectedRoute allowedRoles={['Patient']}>
             <MainLayout>
@@ -154,7 +150,7 @@ const AppContent = () => {
         }
       />
       <Route
-        path="/patient/hospitals/:hospitalId"
+        path="/hospitals/:hospitalId"
         element={
           <ProtectedRoute allowedRoles={['Patient']}>
             <MainLayout>
@@ -164,7 +160,7 @@ const AppContent = () => {
         }
       />
       <Route
-        path="/patient/doctors"
+        path="/doctors"
         element={
           <ProtectedRoute allowedRoles={['Patient']}>
             <MainLayout>
@@ -174,7 +170,7 @@ const AppContent = () => {
         }
       />
       <Route
-        path="/patient/book/:doctorId"
+        path="/book-appointment/:doctorId"
         element={
           <ProtectedRoute allowedRoles={['Patient']}>
             <MainLayout>
@@ -184,7 +180,7 @@ const AppContent = () => {
         }
       />
       <Route
-        path="/patient/ai-assistant"
+        path="/ai-assistant"
         element={
           <ProtectedRoute allowedRoles={['Patient']}>
             <MainLayout>
@@ -194,7 +190,27 @@ const AppContent = () => {
         }
       />
       <Route
-        path="/patient/medical-records"
+        path="/ai-chatbot"
+        element={
+          <ProtectedRoute allowedRoles={['Patient']}>
+            <MainLayout>
+              <AIAssistant />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ai-symptom-analyzer"
+        element={
+          <ProtectedRoute allowedRoles={['Patient']}>
+            <MainLayout>
+              <AIAssistant />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/medical-records"
         element={
           <ProtectedRoute allowedRoles={['Patient']}>
             <MainLayout>
@@ -204,29 +220,40 @@ const AppContent = () => {
         }
       />
       <Route
-        path="/patient/profile"
+        path="/appointment-history"
         element={
           <ProtectedRoute allowedRoles={['Patient']}>
             <MainLayout>
-              <PatientProfile />
+              <Dashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute allowedRoles={['Patient', 'Doctor']}>
+            <MainLayout>
+              {/* Profile switch based on role */}
+              <ProfileSelector />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute allowedRoles={['Patient', 'Doctor']}>
+            <MainLayout>
+              <ProfileSelector />
             </MainLayout>
           </ProtectedRoute>
         }
       />
 
-      {}
+      {/* Doctor Only Routes */}
       <Route
-        path="/doctor"
-        element={
-          <ProtectedRoute allowedRoles={['Doctor']}>
-            <MainLayout>
-              <DoctorDashboard />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/doctor/availability"
+        path="/availability"
         element={
           <ProtectedRoute allowedRoles={['Doctor']}>
             <MainLayout>
@@ -245,28 +272,8 @@ const AppContent = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/doctor/profile"
-        element={
-          <ProtectedRoute allowedRoles={['Doctor']}>
-            <MainLayout>
-              <DoctorProfile />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
 
-      {}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['Admin']}>
-            <MainLayout>
-              <AdminDashboard />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
+      {/* Admin Only Routes */}
       <Route
         path="/admin/hospitals"
         element={
@@ -348,11 +355,18 @@ const AppContent = () => {
         }
       />
 
-      {}
+      {/* Fallback */}
       <Route path="/" element={<RootRedirect />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
+};
+
+// Profile selector component to route patient vs doctor profile correctly
+const ProfileSelector = () => {
+  const { user } = useAuth();
+  if (!user) return null;
+  return user.role === 'Patient' ? <PatientProfile /> : <DoctorProfile />;
 };
 
 const SplashScreen = ({ onComplete }) => {
@@ -366,16 +380,16 @@ const SplashScreen = ({ onComplete }) => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 text-white">
       <div className="relative flex flex-col items-center gap-4">
-        {}
+        {/* Background Orbs */}
         <div className="absolute w-64 h-64 bg-brand-500/20 rounded-full blur-3xl -top-12 -left-12 animate-pulse"></div>
         <div className="absolute w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -bottom-12 -right-12 animate-pulse"></div>
         
-        {}
+        {/* Icon */}
         <div className="w-20 h-20 bg-brand-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-brand-500/40 relative z-10 animate-bounce">
           <Activity className="w-12 h-12 text-white" />
         </div>
         
-        {}
+        {/* Logo Text */}
         <div className="text-center mt-4 relative z-10">
           <h1 className="text-5xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-brand-400">
             HAS
@@ -385,7 +399,7 @@ const SplashScreen = ({ onComplete }) => {
           </p>
         </div>
         
-        {}
+        {/* Loading Bar */}
         <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-6 relative z-10">
           <div className="h-full bg-brand-500 rounded-full" style={{
             width: '100%',
@@ -395,7 +409,7 @@ const SplashScreen = ({ onComplete }) => {
         </div>
       </div>
       
-      {}
+      {/* Keyframe Styles */}
       <style>{`
         @keyframes loadProgress {
           0% { transform: scaleX(0); }

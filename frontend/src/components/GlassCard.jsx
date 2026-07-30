@@ -1,13 +1,14 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 
 const GlassCard = ({ children, className = '', hoverEffect = true, delay = 0 }) => {
+  const surfaceClass = hoverEffect ? 'glass-card glass-card-interactive' : 'glass-panel';
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay }}
-      className={`${hoverEffect ? 'glass-card' : 'glass-panel'} p-6 rounded-2xl ${className}`}
+      transition={{ duration: 0.28, delay }}
+      className={`${surfaceClass} rounded-2xl p-6 ${className}`}
     >
       {children}
     </motion.div>

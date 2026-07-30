@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { Calendar, Clock, Trash2, ShieldAlert } from 'lucide-react';
+import { Calendar, Trash2 } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { TableSkeleton } from '../../components/LoadingSkeleton';
 
@@ -105,10 +105,11 @@ const AdminAppointments = () => {
                       {['Pending', 'Accepted', 'Rescheduled'].includes(app.status) ? (
                         <button
                           onClick={() => handleCancelAppointment(app._id)}
-                          className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-all"
+                          className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/20"
                           title="Force cancel appointment"
+                          aria-label="Force cancel appointment"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                       ) : (
                         <span className="text-slate-400 text-[10px] pr-2">-</span>

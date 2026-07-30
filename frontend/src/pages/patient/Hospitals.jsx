@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { Search, MapPin, Phone, Clock, Star, ArrowRight, Map, Heart, Compass } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { CardSkeleton } from '../../components/LoadingSkeleton';
@@ -92,14 +92,14 @@ const Hospitals = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
         {}
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
             <Search className="w-5 h-5" />
           </span>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-sm text-slate-800 dark:text-white"
+            className="w-full pl-12 pr-4 py-3 rounded-2xl glass-input text-sm text-slate-800 dark:text-white"
             placeholder="Search hospitals..."
           />
         </div>
@@ -158,7 +158,7 @@ const Hospitals = () => {
               <div className="h-40 w-full overflow-hidden relative bg-slate-200 dark:bg-slate-800">
                 {hospital.banner ? (
                   <ImageLoader
-                    src={`http://localhost:5000${hospital.banner}`}
+                    src={`${BACKEND_URL}${hospital.banner}`}
                     alt={hospital.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     fallbackIcon={Map}
@@ -171,7 +171,7 @@ const Hospitals = () => {
                 <div className="absolute bottom-3 left-4 w-12 h-12 rounded-xl bg-white dark:bg-slate-900 p-1 shadow-lg overflow-hidden border border-white/20">
                   {hospital.logo ? (
                     <ImageLoader
-                      src={`http://localhost:5000${hospital.logo}`}
+                      src={`${BACKEND_URL}${hospital.logo}`}
                       alt="logo"
                       className="w-full h-full object-cover rounded-lg"
                     />
@@ -254,7 +254,7 @@ const Hospitals = () => {
                 {}
                 <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <Link
-                    to={`/patient/hospitals/${hospital.id}`}
+                    to={`/hospitals/${hospital.id}`}
                     className="py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1 transition-all"
                   >
                     Details
@@ -266,7 +266,7 @@ const Hospitals = () => {
                     View Map
                   </button>
                   <Link
-                    to={`/patient/doctors?hospitalId=${hospital.id}`}
+                    to={`/doctors?hospitalId=${hospital.id}`}
                     className="py-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold text-center transition-all"
                   >
                     Doctors

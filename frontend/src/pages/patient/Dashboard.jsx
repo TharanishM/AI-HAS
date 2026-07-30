@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import API from '../../services/api';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import API, { BACKEND_URL } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Calendar, Clock, Video, FileText, ArrowRight, UserCheck, AlertCircle, Trash2, Download, Bot } from 'lucide-react';
+import { Calendar, Clock, FileText, ArrowRight, UserCheck, Trash2, Download, Bot } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { CardSkeleton, ListSkeleton } from '../../components/LoadingSkeleton';
 
 const PatientDashboard = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
-  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [aiHistory, setAiHistory] = useState([]);
@@ -232,7 +231,7 @@ const PatientDashboard = () => {
           </p>
         </div>
         <Link
-          to="/patient/hospitals"
+          to="/hospitals"
           className="px-6 py-3 bg-white text-brand-600 font-semibold rounded-2xl hover:bg-brand-50 transition-all text-sm flex items-center gap-2 shadow-lg shadow-black/5"
         >
           Book Appointment <ArrowRight className="w-4 h-4" />
@@ -308,7 +307,7 @@ const PatientDashboard = () => {
                 <div className="flex items-center gap-4">
                   {nextAppointment.doctorId?.avatar ? (
                     <img
-                      src={`http://localhost:5000${nextAppointment.doctorId.avatar}`}
+                      src={`${BACKEND_URL}${nextAppointment.doctorId.avatar}`}
                       alt={nextAppointment.doctorId.name}
                       className="w-12 h-12 rounded-xl object-cover"
                     />
@@ -371,7 +370,7 @@ const PatientDashboard = () => {
               <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30 text-brand-500" />
               <p className="font-semibold text-sm">No upcoming appointments scheduled.</p>
               <Link
-                to="/patient/hospitals"
+                to="/hospitals"
                 className="text-xs font-semibold text-brand-500 hover:underline mt-2 inline-block"
               >
                 Schedule one now
@@ -383,10 +382,44 @@ const PatientDashboard = () => {
           {appointments.length > 0 && (
             <GlassCard hoverEffect={false}>
               <h3 className="font-bold text-slate-800 dark:text-white mb-4">Appointment History</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="flex flex-col gap-3 md:hidden">
+                {appointments
+                  .filter((app) => app._id !== nextAppointment?._id)
+                  .slice(0, 5)
+                  .map((app) => (
+                    <div key={app._id} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-slate-900 dark:text-white">Dr. {app.doctorId?.name || 'Unknown'}</p>
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{new Date(app.date).toLocaleDateString('en-GB')} · {app.timeSlot}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadReceipt(app)}
+                          className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-brand-600 transition-colors hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-950/30"
+                          title="Print Receipt"
+                          aria-label={`Print receipt for Dr. ${app.doctorId?.name || 'Unknown'}`}
+                        >
+                          <Download className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-bold text-brand-600 dark:text-brand-400">Token {app.tokenNumber || 'N/A'}</span>
+                        <span className={`rounded-full px-2 py-1 font-semibold ${
+                          app.status === 'Completed'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                            : app.status === 'Cancelled' || app.status === 'Rejected'
+                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+                            : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
+                        }`}>{app.status}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[640px] text-left text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold">
+                    <tr className="border-b border-slate-100 font-semibold text-slate-500 dark:border-slate-800 dark:text-slate-400">
                       <th className="pb-3">Doctor</th>
                       <th className="pb-3">Date</th>
                       <th className="pb-3">Slot</th>
@@ -400,33 +433,29 @@ const PatientDashboard = () => {
                       .filter((app) => app._id !== nextAppointment?._id)
                       .slice(0, 5)
                       .map((app) => (
-                        <tr key={app._id} className="border-b border-slate-100/50 dark:border-slate-800/40 text-slate-600 dark:text-slate-400">
-                           <td className="py-3 font-semibold text-slate-800 dark:text-white">
-                            Dr. {app.doctorId?.name || 'Unknown'}
-                          </td>
+                        <tr key={app._id} className="border-b border-slate-100/50 text-slate-600 dark:border-slate-800/40 dark:text-slate-400">
+                          <td className="py-3 font-semibold text-slate-900 dark:text-white">Dr. {app.doctorId?.name || 'Unknown'}</td>
                           <td className="py-3">{new Date(app.date).toLocaleDateString('en-GB')}</td>
                           <td className="py-3">{app.timeSlot}</td>
                           <td className="py-3 font-bold text-brand-500">{app.tokenNumber || 'N/A'}</td>
                           <td className="py-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                                app.status === 'Completed'
-                                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                  : app.status === 'Cancelled' || app.status === 'Rejected'
-                                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
-                                  : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-                              }`}
-                            >
-                              {app.status}
-                            </span>
+                            <span className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                              app.status === 'Completed'
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                : app.status === 'Cancelled' || app.status === 'Rejected'
+                                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+                                : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
+                            }`}>{app.status}</span>
                           </td>
                           <td className="py-3 text-right">
                             <button
+                              type="button"
                               onClick={() => handleDownloadReceipt(app)}
-                              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-brand-500"
+                              className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-brand-600 transition-colors hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-950/30 sm:ml-auto"
                               title="Print Receipt"
+                              aria-label={`Print receipt for Dr. ${app.doctorId?.name || 'Unknown'}`}
                             >
-                              <Download className="w-4 h-4 inline" />
+                              <Download className="h-4 w-4" aria-hidden="true" />
                             </button>
                           </td>
                         </tr>
@@ -496,7 +525,7 @@ const PatientDashboard = () => {
                 </GlassCard>
               ))}
               <Link
-                to="/patient/medical-records"
+                to="/medical-records"
                 className="text-xs font-semibold text-brand-500 hover:text-brand-600 text-center flex items-center justify-center gap-1 mt-1"
               >
                 View all medical history <ArrowRight className="w-3.5 h-3.5" />

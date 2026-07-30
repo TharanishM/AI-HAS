@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import {
   Users,
   Calendar,
@@ -104,7 +104,7 @@ const AdminDashboard = () => {
             <Download className="w-3.5 h-3.5" /> CSV
           </button>
           <a
-            href="http://localhost:5000/api/admin/reports/export/pdf"
+            href={`${BACKEND_URL}/api/admin/reports/export/pdf`}
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md text-[11px] transition-all"
@@ -112,7 +112,7 @@ const AdminDashboard = () => {
             <Download className="w-3.5 h-3.5" /> PDF Report
           </a>
           <a
-            href="http://localhost:5000/api/admin/reports/export/excel"
+            href={`${BACKEND_URL}/api/admin/reports/export/excel`}
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md text-[11px] transition-all"
@@ -357,7 +357,7 @@ const AdminDashboard = () => {
             <h3 className="font-extrabold text-slate-800 dark:text-white">Recent System Bookings</h3>
             <div className="flex gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:flex-initial">
-                <Search className="absolute inset-y-0 left-3 flex items-center text-slate-400 w-4 h-4 mt-3" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}

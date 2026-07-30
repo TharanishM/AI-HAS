@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Plus, Edit2, Trash2, MapPin, Phone, Clock, FileText, Upload, Star, HelpCircle } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
@@ -199,7 +199,7 @@ const AdminHospitals = () => {
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-brand-50 dark:bg-brand-950 rounded-xl overflow-hidden shrink-0 border border-brand-100 flex items-center justify-center">
                   {hosp.logo ? (
-                    <img src={`http://localhost:5000${hosp.logo}`} alt="logo" className="w-full h-full object-cover" />
+                    <img src={`${BACKEND_URL}${hosp.logo}`} alt="logo" className="w-full h-full object-cover" />
                   ) : (
                     <span className="font-extrabold text-brand-600 text-base">{hosp.name.charAt(0)}</span>
                   )}

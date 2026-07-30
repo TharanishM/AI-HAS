@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { FileText, Stethoscope, User, Calendar, ClipboardList } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { ListSkeleton } from '../../components/LoadingSkeleton';
@@ -65,7 +65,7 @@ const PatientMedicalRecords = () => {
                     {new Date(rec.date).toLocaleDateString()}
                   </div>
                   <a
-                    href={`http://localhost:5000/api/appointments/medical-records/${rec._id}/download`}
+                    href={`${BACKEND_URL}/api/appointments/medical-records/${rec._id}/download`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 hover:text-emerald-600 transition-colors"

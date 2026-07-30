@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+export const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.match(/^\d+\.\d+\.\d+\.\d+$/)
+  ? `http://${window.location.hostname}:5000`
+  : 'https://ai-has.onrender.com';
+
 const API = axios.create({
-  baseURL: 'https://ai-has.onrender.com/api',
+  baseURL: `${BACKEND_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },

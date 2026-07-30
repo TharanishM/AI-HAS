@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { Search, Filter, Star, Briefcase, IndianRupee, Calendar, ChevronRight, Building } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
 import { ListSkeleton } from '../../components/LoadingSkeleton';
@@ -178,7 +178,7 @@ const PatientDoctors = () => {
         <div className="lg:col-span-3 flex flex-col gap-6">
           {}
           <div className="relative w-full">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
               <Search className="w-5 h-5" />
             </span>
             <input
@@ -187,7 +187,7 @@ const PatientDoctors = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && fetchDoctors()}
               placeholder="Search doctors by name or clinical specialization (e.g. Sarah, Cardiology)..."
-              className="w-full pl-10 pr-24 py-3 rounded-2xl glass-input text-sm text-slate-800 dark:text-white"
+              className="w-full pl-12 pr-24 py-3 rounded-2xl glass-input text-sm text-slate-800 dark:text-white"
             />
             <button
               onClick={fetchDoctors}
@@ -218,7 +218,7 @@ const PatientDoctors = () => {
                     {doc.userId?.avatar ? (
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/20">
                         <ImageLoader
-                          src={`http://localhost:5000${doc.userId.avatar}`}
+                          src={`${BACKEND_URL}${doc.userId.avatar}`}
                           alt={doc.userId.name}
                           className="w-full h-full object-cover"
                         />
@@ -269,7 +269,7 @@ const PatientDoctors = () => {
 
                   <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto mt-2 md:mt-0 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-slate-850">
                     <button
-                      onClick={() => navigate(`/patient/book/${doc.userId._id}?hospitalId=${doc.hospitalId || ''}`)}
+                      onClick={() => navigate(`/book-appointment/${doc.userId._id}?hospitalId=${doc.hospitalId || ''}`)}
                       className="w-full sm:flex-1 md:w-44 py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-xs transition-all shadow-md shadow-brand-500/10 flex items-center justify-center gap-1.5"
                     >
                       Book Visit <Calendar className="w-4 h-4" />

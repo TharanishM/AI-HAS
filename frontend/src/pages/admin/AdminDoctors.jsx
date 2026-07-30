@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Users, Plus, Star, ToggleLeft, ToggleRight, XCircle, Stethoscope, Briefcase, Mail, Lock, Phone, Building } from 'lucide-react';
 import GlassCard from '../../components/GlassCard';
@@ -155,7 +155,7 @@ const AdminDoctors = () => {
                     <td className="py-3 pl-2 font-semibold text-slate-850 dark:text-white flex items-center gap-2">
                       {doc.userId.avatar ? (
                         <img
-                          src={`http://localhost:5000${doc.userId.avatar}`}
+                          src={`${BACKEND_URL}${doc.userId.avatar}`}
                           alt={doc.userId.name}
                           className="w-8 h-8 rounded-lg object-cover"
                         />
@@ -244,7 +244,7 @@ const AdminDoctors = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Email Address</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Mail className="w-4 h-4" />
                   </span>
                   <input
@@ -253,7 +253,7 @@ const AdminDoctors = () => {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="house@hospital.com"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-850 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-850 dark:text-white"
                   />
                 </div>
               </div>
@@ -262,7 +262,7 @@ const AdminDoctors = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Password</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Lock className="w-4 h-4" />
                   </span>
                   <input
@@ -271,7 +271,7 @@ const AdminDoctors = () => {
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-850 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-850 dark:text-white"
                   />
                 </div>
               </div>
@@ -280,7 +280,7 @@ const AdminDoctors = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Phone Number</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Phone className="w-4 h-4" />
                   </span>
                   <input
@@ -288,8 +288,8 @@ const AdminDoctors = () => {
                     required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+91 98765 43210"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-850 dark:text-white"
+                    placeholder="+91 99999 99999"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-850 dark:text-white"
                   />
                 </div>
               </div>
@@ -358,7 +358,7 @@ const AdminDoctors = () => {
               <div className="flex flex-col gap-1.5">
                 <label>Experience (Years)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
                     <Briefcase className="w-4 h-4" />
                   </span>
                   <input
@@ -367,7 +367,7 @@ const AdminDoctors = () => {
                     value={form.experience}
                     onChange={(e) => setForm({ ...form, experience: e.target.value })}
                     placeholder="12"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl glass-input text-slate-855 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-slate-855 dark:text-white"
                   />
                 </div>
               </div>

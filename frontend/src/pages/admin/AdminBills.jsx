@@ -138,7 +138,7 @@ const AdminBills = () => {
 
       <GlassCard className="p-4 border border-white/20">
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
             <Search className="w-5 h-5" />
           </span>
           <input
@@ -146,7 +146,7 @@ const AdminBills = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search invoice by number, patient or doctor..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+            className="w-full pl-12 pr-4 py-2.5 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
           />
         </div>
       </GlassCard>

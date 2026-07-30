@@ -1,69 +1,71 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import API from '../services/api';
-import { Bell, Sun, Moon, LogOut, User as UserIcon, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import API, { BACKEND_URL } from '../services/api';
+import { Bell, LogOut, Menu, Moon, Sun } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { getRoleTheme } from '../config/roles';
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const { addToast } = useToast();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
+  const roleTheme = getRoleTheme(user?.role);
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const res = await API.get('/notifications');
-      if (res.data.success) {
-        setNotifications(res.data.notifications);
-      }
+      if (res.data.success) setNotifications(res.data.notifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 20000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
+    if (!user) return undefined;
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 20000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications, user]);
 
   useEffect(() => {
+    if (!showNotifications) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setShowNotifications(false);
+    };
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
     };
+
+    document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
 
   const markAllRead = async () => {
     try {
       const res = await API.put('/notifications/read-all');
       if (res.data.success) {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
         addToast('All notifications marked as read', 'info');
       }
     } catch (error) {
-      console.error(error);
+      console.error('Unable to mark notifications as read:', error);
     }
   };
 
@@ -71,49 +73,67 @@ const Navbar = () => {
     try {
       const res = await API.put(`/notifications/${id}/read`);
       if (res.data.success) {
-        setNotifications(prev =>
-          prev.map(n => (n._id === id ? { ...n, isRead: true } : n))
-        );
+        setNotifications((prev) => prev.map((notification) => (
+          notification._id === id ? { ...notification, isRead: true } : notification
+        )));
       }
     } catch (error) {
-      console.error(error);
+      console.error('Unable to mark notification as read:', error);
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
 
   return (
-    <nav className="glass-panel sticky top-0 z-40 w-full px-6 py-4 flex items-center justify-between border-b">
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20">
+    <nav className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80 sm:px-6">
+      <div className="flex min-w-0 items-center gap-2.5">
+        {user && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="-ml-2 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white md:hidden"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          </button>
+        )}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-sm font-bold text-white shadow-lg shadow-brand-500/20">
           H
         </div>
-        <div>
-          <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">H</span>
-          <span className="text-xl font-bold text-brand-500">AS</span>
+        <div className="min-w-0">
+          <p className="truncate text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Hospital Appointment <span className="text-brand-500">System</span>
+          </p>
+          <p className="hidden text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400 sm:block">
+            Connected care operations
+          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        {}
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <button
-          onClick={toggleTheme}
-          className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl transition-all"
+          type="button"
+          onClick={() => setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'))}
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+          aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
         >
-          {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+          {theme === 'light' ? <Moon className="h-5 w-5" aria-hidden="true" /> : <Sun className="h-5 w-5" aria-hidden="true" />}
         </button>
 
-        {}
         {user && (
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl transition-all relative"
+              type="button"
+              onClick={() => setShowNotifications((current) => !current)}
+              className="relative flex min-h-11 min-w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+              aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+              aria-haspopup="true"
+              aria-expanded={showNotifications}
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-4.5 h-4.5 bg-rose-500 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
-                  {unreadCount}
+                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-rose-500 px-0.5 text-[9px] font-bold text-white dark:border-slate-950" aria-hidden="true">
+                  {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
@@ -121,47 +141,52 @@ const Navbar = () => {
             <AnimatePresence>
               {showNotifications && (
                 <motion.div
-                  initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                  className="absolute right-0 mt-3 w-80 glass-panel border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl p-4 overflow-hidden pointer-events-auto"
+                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                  className="absolute right-0 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/30"
+                  role="dialog"
+                  aria-label="Notifications"
                 >
-                  <div className="flex items-center justify-between border-b pb-2 mb-2">
-                    <span className="font-semibold text-slate-800 dark:text-white">Notifications</span>
+                  <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <span className="font-semibold text-slate-900 dark:text-white">Notifications</span>
                     {unreadCount > 0 && (
                       <button
+                        type="button"
                         onClick={markAllRead}
-                        className="text-xs text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium"
+                        className="min-h-11 px-1 text-xs font-semibold text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
                       >
-                        Mark all as read
+                        Mark all read
                       </button>
                     )}
                   </div>
-                  <div className="max-h-60 overflow-y-auto flex flex-col gap-2 pr-1">
+                  <div className="flex max-h-72 flex-col gap-2 overflow-y-auto pr-1">
                     {notifications.length === 0 ? (
-                      <div className="text-center text-xs text-slate-400 dark:text-slate-500 py-6">
+                      <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                         No new notifications.
                       </div>
                     ) : (
-                      notifications.map((notif) => (
-                        <div
-                          key={notif._id}
-                          onClick={() => !notif.isRead && markSingleRead(notif._id)}
-                          className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                            notif.isRead
-                              ? 'bg-transparent border-slate-50 dark:border-slate-900 text-slate-500'
-                              : 'bg-brand-50/50 dark:bg-brand-950/20 border-brand-100 dark:border-brand-900 text-slate-800 dark:text-slate-200'
+                      notifications.map((notification) => (
+                        <button
+                          type="button"
+                          key={notification._id}
+                          onClick={() => !notification.isRead && markSingleRead(notification._id)}
+                          className={`rounded-xl border p-3 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
+                            notification.isRead
+                              ? 'border-slate-100 bg-transparent text-slate-500 dark:border-slate-800 dark:text-slate-400'
+                              : 'border-brand-100 bg-brand-50/60 text-slate-800 dark:border-brand-900 dark:bg-brand-950/30 dark:text-slate-200'
                           }`}
+                          aria-label={`${notification.title}: ${notification.message}`}
                         >
-                          <div className="flex items-center justify-between font-semibold mb-0.5">
-                            <span>{notif.title}</span>
-                            {!notif.isRead && <span className="w-2 h-2 bg-brand-500 rounded-full"></span>}
+                          <div className="mb-1 flex items-center justify-between gap-2 font-semibold">
+                            <span>{notification.title}</span>
+                            {!notification.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-brand-500" aria-hidden="true" />}
                           </div>
-                          <p>{notif.message}</p>
-                          <span className="text-[10px] text-slate-400 mt-1 block">
-                            {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <p className="leading-relaxed">{notification.message}</p>
+                          <span className="mt-1 block text-xs text-slate-400 dark:text-slate-500">
+                            {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>
@@ -171,30 +196,31 @@ const Navbar = () => {
           </div>
         )}
 
-        {}
         {user && (
-          <div className="flex items-center gap-3 border-l pl-4 dark:border-slate-800">
-            <div className="flex flex-col items-end hidden sm:flex">
-              <span className="text-sm font-semibold text-slate-800 dark:text-white">{user.name}</span>
-              <span className="text-xs text-brand-500 font-medium">{user.role}</span>
+          <div className="ml-1 flex items-center gap-2 border-l border-slate-200 pl-2 dark:border-slate-800 sm:ml-2 sm:gap-3 sm:pl-3">
+            <div className="hidden flex-col items-end sm:flex">
+              <span className="max-w-40 truncate text-sm font-semibold text-slate-900 dark:text-white">{user.name}</span>
+              <span className={`text-xs font-semibold ${roleTheme.navAccent}`}>{user.role}</span>
             </div>
             {user.avatar ? (
               <img
-                src={`http://localhost:5000${user.avatar}`}
-                alt={user.name}
-                className="w-10 h-10 rounded-full object-cover border-2 border-brand-500/20"
+                src={user.avatar.startsWith('http') ? user.avatar : `${BACKEND_URL}${user.avatar}`}
+                alt=""
+                className="h-9 w-9 rounded-full border-2 border-brand-500/20 object-cover sm:h-10 sm:w-10"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
-                {user.name.charAt(0)}
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300 sm:h-10 sm:w-10">
+                {user.name?.charAt(0)}
               </div>
             )}
             <button
+              type="button"
               onClick={logout}
-              className="p-2.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 rounded-xl transition-all"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-rose-500 transition-colors hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-500/40 dark:hover:bg-rose-950/30"
               title="Logout"
+              aria-label="Logout"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         )}
