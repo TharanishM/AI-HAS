@@ -27,6 +27,15 @@ const BookAppointment = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [bookedApptDetails, setBookedApptDetails] = useState(null);
 
+  useEffect(() => {
+    if (!showSuccessModal) return undefined;
+    const timer = setTimeout(() => {
+      setShowSuccessModal(false);
+      navigate('/dashboard');
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [showSuccessModal, navigate]);
+
   const queryParams = new URLSearchParams(location.search);
   const hospitalId = queryParams.get('hospitalId');
 
@@ -331,6 +340,14 @@ const BookAppointment = () => {
             >
               <GlassCard className="flex flex-col gap-5 border border-white/20 p-6 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                <div className="absolute bottom-0 inset-x-0 h-1 bg-emerald-500/10 overflow-hidden">
+                  <motion.div 
+                    initial={{ width: '100%' }}
+                    animate={{ width: '0%' }}
+                    transition={{ duration: 5, ease: 'linear' }}
+                    className="h-full bg-emerald-500"
+                  />
+                </div>
                 
                 <div className="text-center flex flex-col items-center gap-2">
                   <motion.div 

@@ -5,6 +5,7 @@ import API, { BACKEND_URL } from '../services/api';
 import { Bell, LogOut, Menu, Moon, Sun } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getRoleTheme } from '../config/roles';
+import { io } from 'socket.io-client';
 
 const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -33,9 +34,26 @@ const Navbar = ({ onMenuClick }) => {
     if (!user) return undefined;
 
     fetchNotifications();
+
+    const socket = io(BACKEND_URL);
+    socket.emit('join_room', user.id);
+
+    socket.on('notification', (newNotification) => {
+      setNotifications((prev) => {
+        const exists = prev.some((n) => n._id === newNotification.id || n.id === newNotification.id);
+        if (exists) return prev;
+        const formatted = { ...newNotification, _id: newNotification.id };
+        return [formatted, ...prev];
+      });
+      addToast(newNotification.title, 'info');
+    });
+
     const interval = setInterval(fetchNotifications, 20000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications, user]);
+    return () => {
+      clearInterval(interval);
+      socket.disconnect();
+    };
+  }, [fetchNotifications, user, addToast]);
 
   useEffect(() => {
     if (!showNotifications) return undefined;
@@ -144,7 +162,7 @@ const Navbar = ({ onMenuClick }) => {
                   initial={{ opacity: 0, y: 8, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                  className="absolute right-0 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/30"
+                  className="fixed left-4 right-4 top-[72px] z-50 flex max-h-[70vh] max-w-[90vw] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/30 sm:left-auto sm:right-6 sm:w-96 md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:w-[24rem] md:max-w-none"
                   role="dialog"
                   aria-label="Notifications"
                 >
@@ -160,7 +178,7 @@ const Navbar = ({ onMenuClick }) => {
                       </button>
                     )}
                   </div>
-                  <div className="flex max-h-72 flex-col gap-2 overflow-y-auto pr-1">
+                  <div className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
                     {notifications.length === 0 ? (
                       <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                         No new notifications.

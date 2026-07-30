@@ -12,6 +12,11 @@ import QRCode from 'qrcode';
 
 const createAlert = async (req, userId, title, message, type) => {
   try {
+    const existing = await Notification.findOne({
+      where: { userId, title, message, type }
+    });
+    if (existing) return;
+
     const notification = await Notification.create({ userId, title, message, type });
     if (req && req.app) {
       const io = req.app.get('io');
@@ -134,6 +139,17 @@ export const bookAppointment = async (req, res, next) => {
       `You have a new appointment request from Patient ${req.user.name} for ${date} at ${timeSlot}. Token: ${tokenNumber}`,
       'Booking'
     );
+
+    const admins = await User.findAll({ where: { role: 'Admin' } });
+    for (const admin of admins) {
+      await createAlert(
+        req,
+        admin.id,
+        'New Appointment Booked',
+        `A new appointment (${appointmentNumber}) has been booked by Patient ${req.user.name} with Dr. ${doctorUser.name} on ${date} at ${timeSlot}. Token: ${tokenNumber}`,
+        'Booking'
+      );
+    }
 
     res.status(201).json({ success: true, appointment: populatedAppointment });
   } catch (error) {
