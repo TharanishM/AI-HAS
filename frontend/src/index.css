@@ -47,6 +47,12 @@
   textarea:focus-visible {
     @apply ring-2 ring-brand-500/40 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
   }
+
+  /* Hide browser-native password reveal button (Edge / IE) */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
 }
 
 @layer components {
