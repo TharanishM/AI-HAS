@@ -68,6 +68,7 @@ const Login = () => {
       setEmail('');
       setRememberMe(false);
     }
+    setPassword('');
   }, [activeRole]);
 
   const handleSubmit = async (e) => {
@@ -275,6 +276,7 @@ const Login = () => {
                 id="login-email"
                 type="email"
                 required
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-4 transition-all duration-300 ${theme.focusRing}`}
@@ -304,6 +306,7 @@ const Login = () => {
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full pl-12 pr-11 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-4 transition-all duration-300 ${theme.focusRing}`}
