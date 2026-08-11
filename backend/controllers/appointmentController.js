@@ -120,7 +120,7 @@ export const bookAppointment = async (req, res, next) => {
     const populatedAppointment = await Appointment.findByPk(appointment.id, {
       include: [
         { model: User, as: 'doctor', attributes: ['name'] },
-        { model: Hospital, as: 'hospital', attributes: ['name', 'address'] }
+        { model: Hospital, as: 'hospital', attributes: ['name', 'address', 'city', 'state', 'pinCode', 'latitude', 'longitude'] }
       ]
     });
 

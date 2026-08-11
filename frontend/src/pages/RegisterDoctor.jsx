@@ -300,6 +300,7 @@ const RegisterDoctor = () => {
                     type="text"
                     required
                     name="name"
+                    autoComplete="name"
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
@@ -319,6 +320,7 @@ const RegisterDoctor = () => {
                     type="email"
                     required
                     name="email"
+                    autoComplete="new-username"
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
@@ -338,6 +340,7 @@ const RegisterDoctor = () => {
                     type="password"
                     required
                     name="password"
+                    autoComplete="new-password"
                     value={formData.password}
                     onChange={handleChange}
                     className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
