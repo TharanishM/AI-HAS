@@ -43,14 +43,14 @@ export const bookAppointment = async (req, res, next) => {
     const patientId = req.user.id;
 
     // Validate that the appointment date is not in the past
-    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-    if (date < todayStr) {
+    const todayDateOnly = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    if (date < todayDateOnly) {
       await t.rollback();
       return res.status(400).json({ success: false, message: 'Please select today or a future appointment date.' });
     }
 
     // Validate that the timeslot is not in the past if scheduled for today
-    if (date === todayStr) {
+    if (date === todayDateOnly) {
       const match = timeSlot.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
       if (match) {
         let [_, hours, minutes, ampm] = match;
