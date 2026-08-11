@@ -60,8 +60,30 @@ const Login = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    // Cleanup old/demo saved emails from localStorage
+    const demoEmails = [
+      'marco@gmail.com',
+      'patient@hospital.com',
+      'doctor@hospital.com',
+      'admin@hospital.com'
+    ];
+    ROLE_ORDER.forEach(role => {
+      const saved = localStorage.getItem(`savedEmail_${role}`);
+      if (saved && demoEmails.includes(saved.toLowerCase().trim())) {
+        localStorage.removeItem(`savedEmail_${role}`);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
     const savedEmail = localStorage.getItem(`savedEmail_${activeRole}`);
-    if (savedEmail) {
+    const demoEmails = [
+      'marco@gmail.com',
+      'patient@hospital.com',
+      'doctor@hospital.com',
+      'admin@hospital.com'
+    ];
+    if (savedEmail && !demoEmails.includes(savedEmail.toLowerCase().trim())) {
       setEmail(savedEmail);
       setRememberMe(true);
     } else {
