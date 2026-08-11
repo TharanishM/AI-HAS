@@ -27,6 +27,21 @@ const AdminApprovals = () => {
     fetchApprovals();
   }, []);
 
+  const handleViewDocument = async (filePath) => {
+    if (!filePath) return;
+    try {
+      const filename = filePath.split('/').pop();
+      const response = await API.get(`/admin/documents/${filename}`, {
+        responseType: 'blob'
+      });
+      const file = new Blob([response.data], { type: response.headers['content-type'] });
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL, '_blank');
+    } catch (err) {
+      addToast('Failed to load document securely.', 'error');
+    }
+  };
+
   const handleAction = async (type, id, action) => {
     try {
       const res = await API.put(`/admin/approvals/${type}/${id}`, { status: action });
@@ -106,9 +121,45 @@ const AdminApprovals = () => {
                           </div>
                         </div>
 
-                        <div className="bg-slate-100/50 dark:bg-slate-900/30 p-3 rounded-xl text-xs text-slate-500 dark:text-slate-400">
-                          <span className="font-bold text-slate-700 dark:text-slate-300">Bio: </span>
-                          {doc.biography || 'No biography details provided.'}
+                        <div className="bg-slate-100/50 dark:bg-slate-900/30 p-3 rounded-xl text-xs text-slate-500 dark:text-slate-400 flex flex-col gap-2">
+                          <div>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Bio: </span>
+                            {doc.biography || 'No biography details provided.'}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Qualifications: </span>
+                            {Array.isArray(doc.qualifications) ? doc.qualifications.join(', ') : doc.qualifications || 'N/A'}
+                          </div>
+                        </div>
+
+                        {/* Documents verification */}
+                        <div className="flex flex-col gap-1.5 border-t dark:border-slate-800 pt-2">
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Documents Verification</span>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleViewDocument(doc.degreeCertificate)}
+                              className="px-2.5 py-1 bg-brand-500/10 hover:bg-brand-500/20 text-brand-500 dark:text-brand-400 rounded-lg text-[10px] font-bold transition-all border border-brand-500/20"
+                            >
+                              📄 Degree Certificate
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleViewDocument(doc.medicalRegistrationCertificate)}
+                              className="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 rounded-lg text-[10px] font-bold transition-all border border-indigo-500/20"
+                            >
+                              📄 Medical Reg. Proof
+                            </button>
+                            {doc.additionalDocument && (
+                              <button
+                                type="button"
+                                onClick={() => handleViewDocument(doc.additionalDocument)}
+                                className="px-2.5 py-1 bg-slate-500/10 hover:bg-slate-500/20 text-slate-500 dark:text-slate-400 rounded-lg text-[10px] font-bold transition-all border border-slate-550/20"
+                              >
+                                📄 Additional Doc
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex gap-3 mt-2">

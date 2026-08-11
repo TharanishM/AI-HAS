@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { Activity } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -96,6 +96,20 @@ const RootRedirect = () => {
   return <Navigate to="/dashboard" replace />;
 };
 
+const PageTransition = ({ children }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      className="w-full"
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 const MainLayout = ({ children }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -110,7 +124,9 @@ const MainLayout = ({ children }) => {
             layout
             className="mx-auto w-full max-w-[1600px] min-w-0"
           >
-            {children}
+            <PageTransition>
+              {children}
+            </PageTransition>
           </motion.div>
         </main>
       </div>
@@ -119,12 +135,14 @@ const MainLayout = ({ children }) => {
 };
 
 const AppContent = () => {
+  const location = useLocation();
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/register-doctor" element={<RegisterDoctor />} />
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public routes */}
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+        <Route path="/register-doctor" element={<PageTransition><RegisterDoctor /></PageTransition>} />
 
       {/* Shared Authenticated Dashboard */}
       <Route
@@ -358,7 +376,8 @@ const AppContent = () => {
       {/* Fallback */}
       <Route path="/" element={<RootRedirect />} />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </AnimatePresence>
   );
 };
 

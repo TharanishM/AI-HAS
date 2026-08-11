@@ -37,6 +37,9 @@ const RegisterDoctor = () => {
   const [departments, setDepartments] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [degreeFile, setDegreeFile] = useState(null);
+  const [medRegFile, setMedRegFile] = useState(null);
+  const [additionalFile, setAdditionalFile] = useState(null);
   const [loadingLocal, setLoadingLocal] = useState(false);
   const [showCustomHospital, setShowCustomHospital] = useState(false);
   const [showCustomDepartment, setShowCustomDepartment] = useState(false);
@@ -122,6 +125,61 @@ const RegisterDoctor = () => {
     }
   };
 
+  const validateFile = (file) => {
+    if (!file) return null;
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      return 'Only PDF, JPG, JPEG, or PNG files are allowed.';
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return 'File size must not exceed 5 MB.';
+    }
+    return null;
+  };
+
+  const handleDegreeChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const error = validateFile(file);
+      if (error) {
+        addToast(error, 'error');
+        e.target.value = null;
+        return;
+      }
+      setDegreeFile(file);
+    }
+  };
+
+  const handleMedRegChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const error = validateFile(file);
+      if (error) {
+        addToast(error, 'error');
+        e.target.value = null;
+        return;
+      }
+      setMedRegFile(file);
+    }
+  };
+
+  const handleAdditionalChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const error = validateFile(file);
+      if (error) {
+        addToast(error, 'error');
+        e.target.value = null;
+        return;
+      }
+      setAdditionalFile(file);
+    }
+  };
+
+  const removeDegreeFile = () => setDegreeFile(null);
+  const removeMedRegFile = () => setMedRegFile(null);
+  const removeAdditionalFile = () => setAdditionalFile(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!showCustomHospital && !formData.hospitalId) {
@@ -130,6 +188,26 @@ const RegisterDoctor = () => {
     }
     if (!showCustomDepartment && !formData.departmentId) {
       addToast('Please select a department or add a new one.', 'warning');
+      return;
+    }
+
+    if (!degreeFile) {
+      addToast('Degree Certificate is required.', 'warning');
+      return;
+    }
+    if (!medRegFile) {
+      addToast('Medical Registration Certificate is required.', 'warning');
+      return;
+    }
+
+    // Form validation
+    if (!formData.name || !formData.email || !formData.password || !formData.phone || !formData.specialization || !formData.experience || !formData.fees) {
+      addToast('Please fill out all required fields.', 'warning');
+      return;
+    }
+
+    if (isNaN(formData.experience) || isNaN(formData.fees)) {
+      addToast('Experience and Consultation Fee must be numbers.', 'warning');
       return;
     }
 
@@ -145,6 +223,15 @@ const RegisterDoctor = () => {
       });
       if (avatarFile) {
         data.append('avatar', avatarFile);
+      }
+      if (degreeFile) {
+        data.append('degreeCertificate', degreeFile);
+      }
+      if (medRegFile) {
+        data.append('medicalRegistrationCertificate', medRegFile);
+      }
+      if (additionalFile) {
+        data.append('additionalDocument', additionalFile);
       }
 
       const res = await API.post('/auth/register-doctor', data, {
@@ -509,6 +596,105 @@ const RegisterDoctor = () => {
                 placeholder="Write a short description about your experience, achievements, and specialized treatments..."
                 className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white min-h-[100px]"
               />
+            </div>
+          </div>
+
+          {/* PROFESSIONAL VERIFICATION DOCUMENTS */}
+          <div className="flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+              Professional Verification Documents
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Degree Certificate */}
+              <div className="flex flex-col gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                  📄 Degree Certificate <span className="text-rose-500">*</span>
+                </span>
+                <span className="text-[10px] text-slate-400">Upload PDF/JPG/PNG (Max 5MB)</span>
+                
+                {degreeFile ? (
+                  <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl mt-2 text-xs">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium truncate max-w-[180px]">
+                      ✓ {degreeFile.name}
+                    </span>
+                    <div className="flex gap-2">
+                      <label className="cursor-pointer text-indigo-500 hover:text-indigo-600 font-bold text-[10px]">
+                        Change
+                        <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleDegreeChange} />
+                      </label>
+                      <button type="button" onClick={removeDegreeFile} className="text-rose-500 hover:text-rose-600 font-bold text-[10px]">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer mt-2 w-full py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-white rounded-xl transition-all border border-slate-200 dark:border-slate-800 text-center block">
+                    Choose File
+                    <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleDegreeChange} />
+                  </label>
+                )}
+              </div>
+
+              {/* Medical Registration Certificate */}
+              <div className="flex flex-col gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                  📄 Medical Registration Certificate <span className="text-rose-500">*</span>
+                </span>
+                <span className="text-[10px] text-slate-400">Upload PDF/JPG/PNG (Max 5MB)</span>
+                
+                {medRegFile ? (
+                  <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl mt-2 text-xs">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium truncate max-w-[180px]">
+                      ✓ {medRegFile.name}
+                    </span>
+                    <div className="flex gap-2">
+                      <label className="cursor-pointer text-indigo-500 hover:text-indigo-600 font-bold text-[10px]">
+                        Change
+                        <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleMedRegChange} />
+                      </label>
+                      <button type="button" onClick={removeMedRegFile} className="text-rose-500 hover:text-rose-600 font-bold text-[10px]">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer mt-2 w-full py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-white rounded-xl transition-all border border-slate-200 dark:border-slate-800 text-center block">
+                    Choose File
+                    <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleMedRegChange} />
+                  </label>
+                )}
+              </div>
+
+              {/* Additional Supporting Document */}
+              <div className="flex flex-col gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl md:col-span-2">
+                <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                  📄 Additional Supporting Document (Optional)
+                </span>
+                <span className="text-[10px] text-slate-400">Upload PDF/JPG/PNG (Max 5MB)</span>
+                
+                {additionalFile ? (
+                  <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl mt-2 text-xs">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium truncate max-w-[300px]">
+                      ✓ {additionalFile.name}
+                    </span>
+                    <div className="flex gap-2">
+                      <label className="cursor-pointer text-indigo-500 hover:text-indigo-600 font-bold text-[10px]">
+                        Change
+                        <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleAdditionalChange} />
+                      </label>
+                      <button type="button" onClick={removeAdditionalFile} className="text-rose-500 hover:text-rose-600 font-bold text-[10px]">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer mt-2 w-full py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-white rounded-xl transition-all border border-slate-200 dark:border-slate-800 text-center block">
+                    Choose File
+                    <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleAdditionalChange} />
+                  </label>
+                )}
+              </div>
             </div>
           </div>
 

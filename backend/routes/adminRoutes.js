@@ -8,6 +8,7 @@ import {
   approveDoctor,
   approveHospital,
   approveDepartment,
+  getSecureDocument,
   createPatientAdmin,
   updatePatientAdmin,
   deletePatientAdmin,
@@ -39,6 +40,7 @@ router.get('/analytics', getDashboardAnalytics);
 
 // Pending approvals
 router.get('/approvals', getPendingApprovals);
+router.get('/documents/:filename', getSecureDocument);
 router.put('/approvals/doctors/:id', approveDoctor);
 router.put('/approvals/hospitals/:id', approveHospital);
 router.put('/approvals/departments/:id', approveDepartment);

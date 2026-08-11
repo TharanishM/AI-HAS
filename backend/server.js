@@ -33,7 +33,7 @@ dotenv.config();
 const initDB = async () => {
   await connectDB();
   try {
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
     console.log('Database models synchronized with PostgreSQL successfully.');
   } catch (error) {
     console.error('Error syncing database models:', error);
@@ -52,6 +52,10 @@ const __dirname = path.resolve();
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+const secureUploadDir = path.join(uploadDir, 'secure');
+if (!fs.existsSync(secureUploadDir)) {
+  fs.mkdirSync(secureUploadDir, { recursive: true });
 }
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

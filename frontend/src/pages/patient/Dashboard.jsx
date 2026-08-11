@@ -547,7 +547,7 @@ const PatientDashboard = () => {
               Describe symptoms to identify health conditions, locate target medical clinics, and match with doctors.
             </p>
             <Link
-              to="/patient/ai-assistant"
+              to="/ai-assistant"
               className="w-full py-2.5 bg-indigo-500 text-white rounded-xl font-semibold text-xs text-center block hover:bg-indigo-600 transition-all"
             >
               Analyze Symptoms Now

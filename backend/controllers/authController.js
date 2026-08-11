@@ -145,9 +145,52 @@ export const registerDoctor = async (req, res, next) => {
       finalDepartmentId = dept.id;
     }
 
+    // Basic format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: 'Invalid email address format.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+    }
+
+    const phoneRegex = /^\+?[0-9]{10,15}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ success: false, message: 'Invalid phone number. Must be between 10 to 15 digits.' });
+    }
+
+    if (isNaN(experience) || isNaN(fees)) {
+      return res.status(400).json({ success: false, message: 'Experience and Consultation Fees must be numeric values.' });
+    }
+
+    // Required files validation
+    if (!req.files || !req.files['degreeCertificate'] || !req.files['degreeCertificate'][0]) {
+      return res.status(400).json({ success: false, message: 'Degree Certificate is required.' });
+    }
+
+    if (!req.files || !req.files['medicalRegistrationCertificate'] || !req.files['medicalRegistrationCertificate'][0]) {
+      return res.status(400).json({ success: false, message: 'Medical Registration Certificate is required.' });
+    }
+
     let avatarUrl = '';
-    if (req.file) {
-      avatarUrl = `/uploads/${req.file.filename}`;
+    if (req.files && req.files['avatar'] && req.files['avatar'][0]) {
+      avatarUrl = `/uploads/${req.files['avatar'][0].filename}`;
+    }
+
+    let degreeCertificateUrl = '';
+    if (req.files && req.files['degreeCertificate'] && req.files['degreeCertificate'][0]) {
+      degreeCertificateUrl = `/uploads/secure/${req.files['degreeCertificate'][0].filename}`;
+    }
+
+    let medicalRegistrationCertificateUrl = '';
+    if (req.files && req.files['medicalRegistrationCertificate'] && req.files['medicalRegistrationCertificate'][0]) {
+      medicalRegistrationCertificateUrl = `/uploads/secure/${req.files['medicalRegistrationCertificate'][0].filename}`;
+    }
+
+    let additionalDocumentUrl = '';
+    if (req.files && req.files['additionalDocument'] && req.files['additionalDocument'][0]) {
+      additionalDocumentUrl = `/uploads/secure/${req.files['additionalDocument'][0].filename}`;
     }
 
     const user = await User.create({
@@ -168,6 +211,9 @@ export const registerDoctor = async (req, res, next) => {
       experience: experience ? parseInt(experience) : 0,
       fees: fees ? parseInt(fees) : 0,
       qualifications: qualifications ? (typeof qualifications === 'string' ? JSON.parse(qualifications) : qualifications) : [],
+      degreeCertificate: degreeCertificateUrl,
+      medicalRegistrationCertificate: medicalRegistrationCertificateUrl,
+      additionalDocument: additionalDocumentUrl || null,
       biography: biography || '',
       languages: languages ? (typeof languages === 'string' ? JSON.parse(languages) : languages) : ['English', 'Tamil'],
       availability: availability ? (typeof availability === 'string' ? JSON.parse(availability) : availability) : [],

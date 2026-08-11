@@ -57,6 +57,18 @@ const Doctor = sequelize.define('Doctor', {
     type: DataTypes.JSON,
     defaultValue: [],
   },
+  degreeCertificate: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  medicalRegistrationCertificate: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  additionalDocument: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   biography: {
     type: DataTypes.TEXT,
     defaultValue: '',

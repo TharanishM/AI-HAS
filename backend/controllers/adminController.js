@@ -10,6 +10,8 @@ import sequelize from '../config/db.js';
 import { Op } from 'sequelize';
 import exceljs from 'exceljs';
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 
 export const getDashboardAnalytics = async (req, res, next) => {
   try {
@@ -809,6 +811,23 @@ export const exportReportPDF = async (req, res, next) => {
     });
 
     doc.end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSecureDocument = async (req, res, next) => {
+  try {
+    const { filename } = req.params;
+    // Prevent directory traversal attacks
+    const safeFilename = path.basename(filename);
+    const filePath = path.join(path.resolve(), 'uploads', 'secure', safeFilename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'Document not found' });
+    }
+
+    res.sendFile(filePath);
   } catch (error) {
     next(error);
   }

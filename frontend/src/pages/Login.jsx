@@ -65,9 +65,7 @@ const Login = () => {
       setEmail(savedEmail);
       setRememberMe(true);
     } else {
-      if (activeRole === 'Patient') setEmail('patient@hospital.com');
-      else if (activeRole === 'Doctor') setEmail('sarah.jenkins@hospital.com');
-      else if (activeRole === 'Admin') setEmail('admin@hospital.com');
+      setEmail('');
       setRememberMe(false);
     }
   }, [activeRole]);
@@ -280,7 +278,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-4 transition-all duration-300 ${theme.focusRing}`}
-                placeholder={`${activeRole.toLowerCase()}@hospital.com`}
+                placeholder="Enter your email address"
               />
             </div>
           </div>
@@ -309,7 +307,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full pl-12 pr-11 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-4 transition-all duration-300 ${theme.focusRing}`}
-                placeholder="••••••••"
+                placeholder="Enter your password"
               />
               <button
                 type="button"

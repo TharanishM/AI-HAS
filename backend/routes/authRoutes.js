@@ -21,7 +21,12 @@ import upload from '../middleware/upload.js';
 const router = express.Router();
 
 router.post('/register', registerPatient);
-router.post('/register-doctor', upload.single('avatar'), registerDoctor);
+router.post('/register-doctor', upload.fields([
+  { name: 'avatar', maxCount: 1 },
+  { name: 'degreeCertificate', maxCount: 1 },
+  { name: 'medicalRegistrationCertificate', maxCount: 1 },
+  { name: 'additionalDocument', maxCount: 1 }
+]), registerDoctor);
 router.post('/login', login);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
