@@ -130,33 +130,47 @@ const AdminApprovals = () => {
                             <span className="font-bold text-slate-700 dark:text-slate-300">Qualifications: </span>
                             {Array.isArray(doc.qualifications) ? doc.qualifications.join(', ') : doc.qualifications || 'N/A'}
                           </div>
+                          <div className="border-t dark:border-slate-800/60 pt-2 mt-1 flex flex-col gap-1 text-[11px]">
+                            <div>
+                              <span className="font-bold text-slate-700 dark:text-slate-400">Medical Registration Number: </span>
+                              {doc.medicalRegistrationNumber || 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-700 dark:text-slate-400">State Medical Council: </span>
+                              {doc.stateMedicalCouncil || 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-700 dark:text-slate-400">Registration Date: </span>
+                              {doc.registrationDate ? new Date(doc.registrationDate).toLocaleDateString('en-GB') : 'N/A'}
+                            </div>
+                          </div>
                         </div>
 
                         {/* Documents verification */}
                         <div className="flex flex-col gap-1.5 border-t dark:border-slate-800 pt-2">
                           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Documents Verification</span>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-col gap-2">
                             <button
                               type="button"
                               onClick={() => handleViewDocument(doc.degreeCertificate)}
-                              className="px-2.5 py-1 bg-brand-500/10 hover:bg-brand-500/20 text-brand-500 dark:text-brand-400 rounded-lg text-[10px] font-bold transition-all border border-brand-500/20"
+                              className="w-full py-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-500 dark:text-brand-400 rounded-xl text-xs font-bold transition-all border border-brand-500/20 text-center"
                             >
-                              📄 Degree Certificate
+                              View Degree Certificate
                             </button>
                             <button
                               type="button"
                               onClick={() => handleViewDocument(doc.medicalRegistrationCertificate)}
-                              className="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 rounded-lg text-[10px] font-bold transition-all border border-indigo-500/20"
+                              className="w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 rounded-xl text-xs font-bold transition-all border border-indigo-500/20 text-center"
                             >
-                              📄 Medical Reg. Proof
+                              View Medical Registration Certificate
                             </button>
-                            {doc.additionalDocument && (
+                            {doc.additionalQualificationCertificate && (
                               <button
                                 type="button"
-                                onClick={() => handleViewDocument(doc.additionalDocument)}
-                                className="px-2.5 py-1 bg-slate-500/10 hover:bg-slate-500/20 text-slate-500 dark:text-slate-400 rounded-lg text-[10px] font-bold transition-all border border-slate-550/20"
+                                onClick={() => handleViewDocument(doc.additionalQualificationCertificate)}
+                                className="w-full py-2 bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-350 rounded-xl text-xs font-bold transition-all border border-slate-500/20 text-center"
                               >
-                                📄 Additional Doc
+                                View Additional Qualification
                               </button>
                             )}
                           </div>

@@ -31,6 +31,9 @@ const RegisterDoctor = () => {
     // Custom dept fields
     newDepartmentName: '',
     newDepartmentDescription: '',
+    medicalRegistrationNumber: '',
+    stateMedicalCouncil: '',
+    registrationDate: '',
   });
 
   const [hospitals, setHospitals] = useState([]);
@@ -201,7 +204,18 @@ const RegisterDoctor = () => {
     }
 
     // Form validation
-    if (!formData.name || !formData.email || !formData.password || !formData.phone || !formData.specialization || !formData.experience || !formData.fees) {
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.password ||
+      !formData.phone ||
+      !formData.specialization ||
+      !formData.experience ||
+      !formData.fees ||
+      !formData.medicalRegistrationNumber ||
+      !formData.stateMedicalCouncil ||
+      !formData.registrationDate
+    ) {
       addToast('Please fill out all required fields.', 'warning');
       return;
     }
@@ -231,7 +245,7 @@ const RegisterDoctor = () => {
         data.append('medicalRegistrationCertificate', medRegFile);
       }
       if (additionalFile) {
-        data.append('additionalDocument', additionalFile);
+        data.append('additionalQualificationCertificate', additionalFile);
       }
 
       const res = await API.post('/auth/register-doctor', data, {
@@ -268,350 +282,423 @@ const RegisterDoctor = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {/* Avatar upload */}
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative w-24 h-24 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-900">
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <Image className="w-8 h-8 text-slate-400" />
-              )}
-            </div>
-            <label className="cursor-pointer px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-white rounded-xl transition-all border border-slate-200 dark:border-slate-800">
-              Upload Profile Photo
-              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-            </label>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Full Name</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
-                  <User className="w-5 h-5" />
-                </span>
-                <input
-                  type="text"
-                  required
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-                  placeholder="Dr. Rajesh Kumar"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Email Address</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
-                  <Mail className="w-5 h-5" />
-                </span>
-                <input
-                  type="email"
-                  required
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-                  placeholder="dr.rajesh@hospital.com"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Password</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
-                  <Lock className="w-5 h-5" />
-                </span>
-                <input
-                  type="password"
-                  required
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-                  placeholder="••••••••"
-                  minLength={6}
-                />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Phone Number (Indian)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
-                  <Phone className="w-5 h-5" />
-                </span>
-                <input
-                  type="text"
-                  required
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-                  placeholder="+91 98765 43210"
-                />
-              </div>
-            </div>
-
-            {/* Gender */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Gender</label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-              >
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            {/* Specialization */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Specialization</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
-                  <Award className="w-5 h-5" />
-                </span>
-                <input
-                  type="text"
-                  required
-                  name="specialization"
-                  value={formData.specialization}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-                  placeholder="Interventional Cardiology"
-                />
-              </div>
-            </div>
-
-            {/* Experience */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Experience (Years)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
-                  <Award className="w-5 h-5 text-emerald-500" />
-                </span>
-                <input
-                  type="number"
-                  required
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-                  placeholder="10"
-                />
-              </div>
-            </div>
-
-            {/* Consultation Fees */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Consultation Fees (₹)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold flex items-center pointer-events-none">
-                  ₹
-                </span>
-                <input
-                  type="number"
-                  required
-                  name="fees"
-                  value={formData.fees}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-                  placeholder="500"
-                />
-              </div>
-            </div>
-
-            {/* Hospital assignment */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Hospital</label>
-              <select
-                name="hospitalId"
-                value={formData.hospitalId || (showCustomHospital ? 'new' : '')}
-                onChange={handleHospitalChange}
-                className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-              >
-                <option value="">Select Hospital</option>
-                {hospitals.map(h => (
-                  <option key={h.id} value={h.id}>{h.name}</option>
-                ))}
-                <option value="new">+ Add New Hospital (Requires Approval)</option>
-              </select>
-            </div>
-
-            {/* Department assignment */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Department</label>
-              <select
-                name="departmentId"
-                value={formData.departmentId || (showCustomDepartment ? 'new' : '')}
-                onChange={handleDepartmentChange}
-                className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-              >
-                <option value="">Select Department</option>
-                {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-                <option value="new">+ Add New Department (Requires Approval)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Conditional Hospital fields */}
-          <AnimatePresence>
-            {showCustomHospital && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="border border-brand-500/30 bg-brand-500/5 p-5 rounded-2xl flex flex-col gap-4"
-              >
-                <h4 className="text-sm font-bold text-brand-500 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4" /> Add New Hospital Details
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* SECTION 1: PERSONAL INFORMATION */}
+          <div className="flex flex-col gap-4">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider border-b dark:border-slate-800 pb-2">
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Full Name</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
+                    <User className="w-5 h-5" />
+                  </span>
                   <input
                     type="text"
                     required
-                    name="newHospitalName"
-                    value={formData.newHospitalName}
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
-                    placeholder="New Hospital Name"
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="Dr. Rajesh Kumar"
                   />
-                  <input
-                    type="text"
-                    required
-                    name="newHospitalAddress"
-                    value={formData.newHospitalAddress}
-                    onChange={handleChange}
-                    placeholder="Address"
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
-                  />
-                  <input
-                    type="text"
-                    required
-                    name="newHospitalPhone"
-                    value={formData.newHospitalPhone}
-                    onChange={handleChange}
-                    placeholder="Hospital Phone Number"
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
-                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Email Address</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
+                    <Mail className="w-5 h-5" />
+                  </span>
                   <input
                     type="email"
                     required
-                    name="newHospitalEmail"
-                    value={formData.newHospitalEmail}
+                    name="email"
+                    value={formData.email}
                     onChange={handleChange}
-                    placeholder="Hospital Email"
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
-                  />
-                  <input
-                    type="text"
-                    required
-                    name="newHospitalPinCode"
-                    value={formData.newHospitalPinCode}
-                    onChange={handleChange}
-                    placeholder="Pin Code (e.g. 641018)"
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
-                  />
-                  <input
-                    type="text"
-                    required
-                    name="newHospitalEmergencyContact"
-                    value={formData.newHospitalEmergencyContact}
-                    onChange={handleChange}
-                    placeholder="Emergency Contact"
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="dr.rajesh@hospital.com"
                   />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
 
-          {/* Conditional Dept fields */}
-          <AnimatePresence>
-            {showCustomDepartment && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="border border-brand-500/30 bg-brand-500/5 p-5 rounded-2xl flex flex-col gap-4"
-              >
-                <h4 className="text-sm font-bold text-brand-500 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4" /> Add New Department Details
-                </h4>
-                <div className="flex flex-col gap-4">
+              {/* Password */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Password</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
+                    <Lock className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="password"
+                    required
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="••••••••"
+                    minLength={6}
+                  />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Phone Number (Indian)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
+                    <Phone className="w-5 h-5" />
+                  </span>
                   <input
                     type="text"
                     required
-                    name="newDepartmentName"
-                    value={formData.newDepartmentName}
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleChange}
-                    placeholder="New Department Name"
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
-                  />
-                  <textarea
-                    required
-                    name="newDepartmentDescription"
-                    value={formData.newDepartmentDescription}
-                    onChange={handleChange}
-                    placeholder="Department Description..."
-                    className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white min-h-[80px]"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="+91 98765 43210"
                   />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
 
-          {/* Qualifications & Biography */}
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Qualifications (Comma Separated)</label>
-              <input
-                type="text"
-                name="qualifications"
-                value={formData.qualifications}
-                onChange={handleChange}
-                placeholder="MBBS, MD - General Medicine, DM - Cardiology"
-                className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Biography</label>
-              <textarea
-                name="biography"
-                value={formData.biography}
-                onChange={handleChange}
-                placeholder="Write a short description about your experience, achievements, and specialized treatments..."
-                className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white min-h-[100px]"
-              />
+              {/* Gender */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Gender</label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* PROFESSIONAL VERIFICATION DOCUMENTS */}
+          {/* SECTION 2: PROFESSIONAL INFORMATION */}
           <div className="flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-              Professional Verification Documents
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider border-b dark:border-slate-800 pb-2">
+              Professional Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Specialization */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Specialization</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
+                    <Award className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    name="specialization"
+                    value={formData.specialization}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="Interventional Cardiology"
+                  />
+                </div>
+              </div>
+
+              {/* Experience */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Experience (Years)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
+                    <Award className="w-5 h-5 text-emerald-500" />
+                  </span>
+                  <input
+                    type="number"
+                    required
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="10"
+                  />
+                </div>
+              </div>
+
+              {/* Consultation Fees */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Consultation Fees (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold flex items-center pointer-events-none">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    required
+                    name="fees"
+                    value={formData.fees}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: HOSPITAL INFORMATION */}
+          <div className="flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider border-b dark:border-slate-800 pb-2">
+              Hospital Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Hospital */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Hospital</label>
+                <select
+                  name="hospitalId"
+                  value={formData.hospitalId || (showCustomHospital ? 'new' : '')}
+                  onChange={handleHospitalChange}
+                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                >
+                  <option value="">Select Hospital</option>
+                  {hospitals.map(h => (
+                    <option key={h.id} value={h.id}>{h.name}</option>
+                  ))}
+                  <option value="new">+ Add New Hospital (Requires Approval)</option>
+                </select>
+              </div>
+
+              {/* Department */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Department</label>
+                <select
+                  name="departmentId"
+                  value={formData.departmentId || (showCustomDepartment ? 'new' : '')}
+                  onChange={handleDepartmentChange}
+                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                  <option value="new">+ Add New Department (Requires Approval)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Conditional Hospital fields */}
+            <AnimatePresence>
+              {showCustomHospital && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="border border-brand-500/30 bg-brand-500/5 p-5 rounded-2xl flex flex-col gap-4"
+                >
+                  <h4 className="text-sm font-bold text-brand-500 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" /> Add New Hospital Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      required
+                      name="newHospitalName"
+                      value={formData.newHospitalName}
+                      onChange={handleChange}
+                      placeholder="New Hospital Name"
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    />
+                    <input
+                      type="text"
+                      required
+                      name="newHospitalAddress"
+                      value={formData.newHospitalAddress}
+                      onChange={handleChange}
+                      placeholder="Address"
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    />
+                    <input
+                      type="text"
+                      required
+                      name="newHospitalPhone"
+                      value={formData.newHospitalPhone}
+                      onChange={handleChange}
+                      placeholder="Hospital Phone Number"
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    />
+                    <input
+                      type="email"
+                      required
+                      name="newHospitalEmail"
+                      value={formData.newHospitalEmail}
+                      onChange={handleChange}
+                      placeholder="Hospital Email"
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    />
+                    <input
+                      type="text"
+                      required
+                      name="newHospitalPinCode"
+                      value={formData.newHospitalPinCode}
+                      onChange={handleChange}
+                      placeholder="Pin Code (e.g. 641018)"
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    />
+                    <input
+                      type="text"
+                      required
+                      name="newHospitalEmergencyContact"
+                      value={formData.newHospitalEmergencyContact}
+                      onChange={handleChange}
+                      placeholder="Emergency Contact"
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Conditional Dept fields */}
+            <AnimatePresence>
+              {showCustomDepartment && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="border border-brand-500/30 bg-brand-500/5 p-5 rounded-2xl flex flex-col gap-4"
+                >
+                  <h4 className="text-sm font-bold text-brand-500 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" /> Add New Department Details
+                  </h4>
+                  <div className="flex flex-col gap-4">
+                    <input
+                      type="text"
+                      required
+                      name="newDepartmentName"
+                      value={formData.newDepartmentName}
+                      onChange={handleChange}
+                      placeholder="New Department Name"
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white"
+                    />
+                    <textarea
+                      required
+                      name="newDepartmentDescription"
+                      value={formData.newDepartmentDescription}
+                      onChange={handleChange}
+                      placeholder="Department Description..."
+                      className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-800 dark:text-white min-h-[80px]"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* SECTION 4: QUALIFICATIONS */}
+          <div className="flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider border-b dark:border-slate-800 pb-2">
+              Qualifications & Bio
+            </h3>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Qualifications (Comma Separated)</label>
+                <input
+                  type="text"
+                  name="qualifications"
+                  value={formData.qualifications}
+                  onChange={handleChange}
+                  placeholder="MBBS, MD - General Medicine, DM - Cardiology"
+                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Biography</label>
+                <textarea
+                  name="biography"
+                  value={formData.biography}
+                  onChange={handleChange}
+                  placeholder="Write a short description about your experience, achievements, and specialized treatments..."
+                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white min-h-[100px]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 5: PROFESSIONAL VERIFICATION */}
+          <div className="flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider border-b dark:border-slate-800 pb-2">
+              Professional Verification
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Medical Registration Number */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Medical Registration Number *</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
+                    <Award className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    name="medicalRegistrationNumber"
+                    value={formData.medicalRegistrationNumber}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                    placeholder="Enter registration number"
+                  />
+                </div>
+              </div>
+
+              {/* State Medical Council */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">State Medical Council *</label>
+                <select
+                  required
+                  name="stateMedicalCouncil"
+                  value={formData.stateMedicalCouncil}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                >
+                  <option value="">Select State Medical Council</option>
+                  <option value="Tamil Nadu Medical Council">Tamil Nadu Medical Council</option>
+                  <option value="Karnataka Medical Council">Karnataka Medical Council</option>
+                  <option value="Andhra Pradesh Medical Council">Andhra Pradesh Medical Council</option>
+                  <option value="Maharashtra Medical Council">Maharashtra Medical Council</option>
+                  <option value="Delhi Medical Council">Delhi Medical Council</option>
+                  <option value="National Medical Commission">National Medical Commission</option>
+                  <option value="Other Medical Council">Other Medical Council</option>
+                </select>
+              </div>
+
+              {/* Registration Date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Registration Date *</label>
+                <input
+                  type="date"
+                  required
+                  name="registrationDate"
+                  value={formData.registrationDate}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-800 dark:text-white"
+                />
+              </div>
+            </div>
+
+            {/* Verification Documents Uploads */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
               {/* Degree Certificate */}
               <div className="flex flex-col gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
                 <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  📄 Degree Certificate <span className="text-rose-500">*</span>
+                  📄 Primary Medical Degree Certificate *
                 </span>
-                <span className="text-[10px] text-slate-400">Upload PDF/JPG/PNG (Max 5MB)</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Upload MBBS or equivalent primary medical qualification certificate.
+                </span>
                 
                 {degreeFile ? (
                   <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl mt-2 text-xs">
@@ -634,14 +721,17 @@ const RegisterDoctor = () => {
                     <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleDegreeChange} />
                   </label>
                 )}
+                <span className="text-[10px] text-slate-450 dark:text-slate-500">Accepted: PDF, JPG, JPEG, PNG • Max 5 MB</span>
               </div>
 
               {/* Medical Registration Certificate */}
               <div className="flex flex-col gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
                 <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  📄 Medical Registration Certificate <span className="text-rose-500">*</span>
+                  📄 Medical Registration Certificate *
                 </span>
-                <span className="text-[10px] text-slate-400">Upload PDF/JPG/PNG (Max 5MB)</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Upload your valid medical registration certificate issued by the applicable Medical Council.
+                </span>
                 
                 {medRegFile ? (
                   <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl mt-2 text-xs">
@@ -664,14 +754,17 @@ const RegisterDoctor = () => {
                     <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleMedRegChange} />
                   </label>
                 )}
+                <span className="text-[10px] text-slate-450 dark:text-slate-500">Accepted: PDF, JPG, JPEG, PNG • Max 5 MB</span>
               </div>
 
-              {/* Additional Supporting Document */}
+              {/* Additional Qualification Certificate */}
               <div className="flex flex-col gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl md:col-span-2">
                 <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  📄 Additional Supporting Document (Optional)
+                  📄 Additional Qualification Certificate
                 </span>
-                <span className="text-[10px] text-slate-400">Upload PDF/JPG/PNG (Max 5MB)</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Optional: Upload MD, MS, Diploma, DM, or other additional qualification certificates.
+                </span>
                 
                 {additionalFile ? (
                   <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl mt-2 text-xs">
@@ -694,57 +787,80 @@ const RegisterDoctor = () => {
                     <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleAdditionalChange} />
                   </label>
                 )}
+                <span className="text-[10px] text-slate-450 dark:text-slate-500">Accepted: PDF, JPG, JPEG, PNG • Max 5 MB</span>
               </div>
             </div>
           </div>
 
-          {/* Languages spoken */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Languages Spoken</label>
-            <div className="flex flex-wrap gap-2">
-              {availableLanguages.map(lang => {
-                const selected = formData.languages.includes(lang);
-                return (
-                  <button
-                    key={lang}
-                    type="button"
-                    onClick={() => handleLanguageToggle(lang)}
-                    className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      selected
-                        ? 'bg-brand-500 border-brand-500 text-white shadow-md'
-                        : 'border-slate-350 dark:border-slate-800 text-slate-600 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-900'
-                    }`}
-                  >
-                    {selected && <Check className="w-3.5 h-3.5" />}
-                    {lang}
-                  </button>
-                );
-              })}
+          {/* SECTION 6: PROFILE & AVAILABILITY */}
+          <div className="flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider border-b dark:border-slate-800 pb-2">
+              Profile & Availability
+            </h3>
+            
+            {/* Profile Photo */}
+            <div className="flex flex-col items-center gap-3 bg-slate-50 dark:bg-slate-900/30 p-4 rounded-2xl border dark:border-slate-850">
+              <div className="relative w-20 h-20 rounded-full border-2 border-dashed border-slate-350 dark:border-slate-800 flex items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-900">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <Image className="w-7 h-7 text-slate-450" />
+                )}
+              </div>
+              <label className="cursor-pointer px-4 py-2 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-white rounded-xl transition-all border border-slate-250 dark:border-slate-800 shadow-sm">
+                Upload Profile Photo
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              </label>
             </div>
-          </div>
 
-          {/* Availability */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Available Consulting Days</label>
-            <div className="flex flex-wrap gap-2">
-              {weekDays.map(day => {
-                const selected = formData.availability.some(d => d.day === day);
-                return (
-                  <button
-                    key={day}
-                    type="button"
-                    onClick={() => handleDayToggle(day)}
-                    className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      selected
-                        ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
-                        : 'border-slate-350 dark:border-slate-800 text-slate-600 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-900'
-                    }`}
-                  >
-                    {selected && <Check className="w-3.5 h-3.5" />}
-                    {day}
-                  </button>
-                );
-              })}
+            {/* Languages spoken */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-slate-655 dark:text-slate-400">Languages Spoken</label>
+              <div className="flex flex-wrap gap-2">
+                {availableLanguages.map(lang => {
+                  const selected = formData.languages.includes(lang);
+                  return (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => handleLanguageToggle(lang)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        selected
+                          ? 'bg-brand-500 border-brand-500 text-white shadow-md'
+                          : 'border-slate-350 dark:border-slate-800 text-slate-600 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-900'
+                      }`}
+                    >
+                      {selected && <Check className="w-3.5 h-3.5" />}
+                      {lang}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Availability */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-slate-655 dark:text-slate-400">Available Consulting Days</label>
+              <div className="flex flex-wrap gap-2">
+                {weekDays.map(day => {
+                  const selected = formData.availability.some(d => d.day === day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => handleDayToggle(day)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        selected
+                          ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
+                          : 'border-slate-350 dark:border-slate-800 text-slate-600 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-900'
+                      }`}
+                    >
+                      {selected && <Check className="w-3.5 h-3.5" />}
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

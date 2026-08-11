@@ -106,6 +106,9 @@ export const registerDoctor = async (req, res, next) => {
       newHospitalEmergencyContact,
       newDepartmentName,
       newDepartmentDescription,
+      medicalRegistrationNumber,
+      stateMedicalCouncil,
+      registrationDate,
     } = req.body;
 
     const userExists = await User.findOne({ where: { email } });
@@ -164,6 +167,11 @@ export const registerDoctor = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Experience and Consultation Fees must be numeric values.' });
     }
 
+    // Required medical registration details validation
+    if (!medicalRegistrationNumber || !stateMedicalCouncil || !registrationDate) {
+      return res.status(400).json({ success: false, message: 'Medical Registration details (Number, State Medical Council, and Date) are required.' });
+    }
+
     // Required files validation
     if (!req.files || !req.files['degreeCertificate'] || !req.files['degreeCertificate'][0]) {
       return res.status(400).json({ success: false, message: 'Degree Certificate is required.' });
@@ -188,9 +196,9 @@ export const registerDoctor = async (req, res, next) => {
       medicalRegistrationCertificateUrl = `/uploads/secure/${req.files['medicalRegistrationCertificate'][0].filename}`;
     }
 
-    let additionalDocumentUrl = '';
-    if (req.files && req.files['additionalDocument'] && req.files['additionalDocument'][0]) {
-      additionalDocumentUrl = `/uploads/secure/${req.files['additionalDocument'][0].filename}`;
+    let additionalQualificationCertificateUrl = '';
+    if (req.files && req.files['additionalQualificationCertificate'] && req.files['additionalQualificationCertificate'][0]) {
+      additionalQualificationCertificateUrl = `/uploads/secure/${req.files['additionalQualificationCertificate'][0].filename}`;
     }
 
     const user = await User.create({
@@ -213,7 +221,10 @@ export const registerDoctor = async (req, res, next) => {
       qualifications: qualifications ? (typeof qualifications === 'string' ? JSON.parse(qualifications) : qualifications) : [],
       degreeCertificate: degreeCertificateUrl,
       medicalRegistrationCertificate: medicalRegistrationCertificateUrl,
-      additionalDocument: additionalDocumentUrl || null,
+      additionalQualificationCertificate: additionalQualificationCertificateUrl || null,
+      medicalRegistrationNumber,
+      stateMedicalCouncil,
+      registrationDate,
       biography: biography || '',
       languages: languages ? (typeof languages === 'string' ? JSON.parse(languages) : languages) : ['English', 'Tamil'],
       availability: availability ? (typeof availability === 'string' ? JSON.parse(availability) : availability) : [],

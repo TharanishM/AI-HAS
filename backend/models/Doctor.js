@@ -65,8 +65,20 @@ const Doctor = sequelize.define('Doctor', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  additionalDocument: {
+  additionalQualificationCertificate: {
     type: DataTypes.STRING,
+    allowNull: true,
+  },
+  medicalRegistrationNumber: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  stateMedicalCouncil: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  registrationDate: {
+    type: DataTypes.DATEONLY,
     allowNull: true,
   },
   biography: {

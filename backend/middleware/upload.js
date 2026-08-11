@@ -6,7 +6,7 @@ const storage = multer.diskStorage({
     if (
       file.fieldname === 'degreeCertificate' ||
       file.fieldname === 'medicalRegistrationCertificate' ||
-      file.fieldname === 'additionalDocument'
+      file.fieldname === 'additionalQualificationCertificate'
     ) {
       cb(null, 'uploads/secure/');
     } else {
