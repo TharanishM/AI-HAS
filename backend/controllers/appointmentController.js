@@ -42,8 +42,8 @@ export const bookAppointment = async (req, res, next) => {
     const { doctorId, hospitalId, date, timeSlot, reason } = req.body;
     const patientId = req.user.id;
 
-    // Validate that the appointment date is not in the past
-    const todayDateOnly = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    // Validate that the appointment date is not in the past (using India timezone)
+    const todayDateOnly = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD
     if (date < todayDateOnly) {
       await t.rollback();
       return res.status(400).json({ success: false, message: 'Please select today or a future appointment date.' });
@@ -59,9 +59,10 @@ export const bookAppointment = async (req, res, next) => {
         if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
         if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
         
-        const slotTime = new Date();
+        const nowIndia = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+        const slotTime = new Date(nowIndia);
         slotTime.setHours(hours, minutes, 0, 0);
-        if (slotTime <= new Date()) {
+        if (slotTime <= nowIndia) {
           await t.rollback();
           return res.status(400).json({ success: false, message: 'The selected time slot has already passed.' });
         }

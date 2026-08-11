@@ -88,12 +88,12 @@ const BookAppointment = () => {
       let slotsToShow = dayAvailability.slots;
       
       // Filter out past time slots if selectedDate is today
-      const todayLocalStr = new Date().toLocaleDateString('en-CA');
+      const todayLocalStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
       if (selectedDate === todayLocalStr) {
-        const now = new Date();
+        const nowIndia = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
         slotsToShow = slotsToShow.filter(slot => {
-          const slotTime = parseSlotToTime(slot, new Date());
-          return slotTime && slotTime > now;
+          const slotTime = parseSlotToTime(slot, nowIndia);
+          return slotTime && slotTime > nowIndia;
         });
       }
 
@@ -113,7 +113,7 @@ const BookAppointment = () => {
       return;
     }
 
-    const todayLocalStr = new Date().toLocaleDateString('en-CA');
+    const todayLocalStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     if (selectedDate < todayLocalStr) {
       addToast('Please select today or a future appointment date.', 'warning');
       return;
@@ -293,7 +293,7 @@ const BookAppointment = () => {
                   <input
                     type="date"
                     required
-                    min={new Date().toLocaleDateString('en-CA')}
+                    min={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl glass-input text-slate-800 dark:text-white"
