@@ -42,6 +42,32 @@ export const bookAppointment = async (req, res, next) => {
     const { doctorId, hospitalId, date, timeSlot, reason } = req.body;
     const patientId = req.user.id;
 
+    // Validate that the appointment date is not in the past
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    if (date < todayStr) {
+      await t.rollback();
+      return res.status(400).json({ success: false, message: 'Please select today or a future appointment date.' });
+    }
+
+    // Validate that the timeslot is not in the past if scheduled for today
+    if (date === todayStr) {
+      const match = timeSlot.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+      if (match) {
+        let [_, hours, minutes, ampm] = match;
+        hours = parseInt(hours);
+        minutes = parseInt(minutes);
+        if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+        if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+        
+        const slotTime = new Date();
+        slotTime.setHours(hours, minutes, 0, 0);
+        if (slotTime <= new Date()) {
+          await t.rollback();
+          return res.status(400).json({ success: false, message: 'The selected time slot has already passed.' });
+        }
+      }
+    }
+
     const doctorUser = await User.findByPk(doctorId, { transaction: t });
     if (!doctorUser || doctorUser.role !== 'Doctor') {
       await t.rollback();

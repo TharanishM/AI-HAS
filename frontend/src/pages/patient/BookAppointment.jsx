@@ -56,6 +56,23 @@ const BookAppointment = () => {
     fetchDoctorDetails();
   }, [doctorId]);
 
+  const parseSlotToTime = (slotStr, baseDate) => {
+    const match = slotStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+    if (!match) return null;
+    let [_, hours, minutes, ampm] = match;
+    hours = parseInt(hours);
+    minutes = parseInt(minutes);
+    if (ampm.toUpperCase() === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+    if (ampm.toUpperCase() === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    const date = new Date(baseDate);
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  };
+
   useEffect(() => {
     if (!selectedDate || !doctor) return;
 
@@ -68,7 +85,19 @@ const BookAppointment = () => {
     );
 
     if (dayAvailability) {
-      setAvailableSlots(dayAvailability.slots);
+      let slotsToShow = dayAvailability.slots;
+      
+      // Filter out past time slots if selectedDate is today
+      const todayLocalStr = new Date().toLocaleDateString('en-CA');
+      if (selectedDate === todayLocalStr) {
+        const now = new Date();
+        slotsToShow = slotsToShow.filter(slot => {
+          const slotTime = parseSlotToTime(slot, new Date());
+          return slotTime && slotTime > now;
+        });
+      }
+
+      setAvailableSlots(slotsToShow);
       setSelectedSlot('');
     } else {
       setAvailableSlots([]);
@@ -81,6 +110,12 @@ const BookAppointment = () => {
     e.preventDefault();
     if (!selectedDate || !selectedSlot || !reason) {
       addToast('Please fill all required fields', 'warning');
+      return;
+    }
+
+    const todayLocalStr = new Date().toLocaleDateString('en-CA');
+    if (selectedDate < todayLocalStr) {
+      addToast('Please select today or a future appointment date.', 'warning');
       return;
     }
 
@@ -258,7 +293,7 @@ const BookAppointment = () => {
                   <input
                     type="date"
                     required
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toLocaleDateString('en-CA')}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl glass-input text-slate-800 dark:text-white"
