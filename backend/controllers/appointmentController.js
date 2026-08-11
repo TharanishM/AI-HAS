@@ -457,12 +457,32 @@ export const getMedicalRecords = async (req, res, next) => {
   }
 };
 
+import Department from '../models/Department.js';
+
 export const downloadAppointmentReceipt = async (req, res, next) => {
   try {
     const appointment = await Appointment.findByPk(req.params.id, {
       include: [
-        { model: User, as: 'patient', attributes: ['name', 'phone', 'email'] },
-        { model: User, as: 'doctor', attributes: ['name'] },
+        { model: User, as: 'patient', attributes: ['id', 'name', 'phone', 'email'] },
+        { 
+          model: User, 
+          as: 'doctor', 
+          attributes: ['name'],
+          include: [
+            {
+              model: Doctor,
+              as: 'doctor',
+              attributes: ['specialization'],
+              include: [
+                {
+                  model: Department,
+                  as: 'department',
+                  attributes: ['name']
+                }
+              ]
+            }
+          ]
+        },
         { model: Hospital, as: 'hospital', attributes: ['name', 'address', 'phone'] }
       ]
     });
@@ -471,27 +491,120 @@ export const downloadAppointmentReceipt = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
 
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=receipt_${appointment.appointmentNumber}.pdf`);
+    res.setHeader('Content-Disposition', `attachment; filename=AI-HAS_Appointment_${appointment.appointmentNumber}.pdf`);
     doc.pipe(res);
 
-    // Title
-    doc.fontSize(20).text('Hospital Appointment Receipt', { align: 'center' });
-    doc.moveDown();
+    // Draw header box
+    doc.rect(50, 40, 495, 60).fill('#0e7ff0');
+    
+    // Header Text
+    doc.fillColor('#ffffff');
+    doc.fontSize(22).font('Helvetica-Bold').text('AI-HAS', 65, 52);
+    doc.fontSize(10).font('Helvetica').text('Healthcare Appointment System', 65, 80);
+    doc.fontSize(10).font('Helvetica-Oblique').text('Care, Connected', 450, 80, { align: 'right', width: 80 });
 
-    // Details
-    doc.fontSize(12).text(`Appointment Number: ${appointment.appointmentNumber}`);
-    doc.text(`Token Number: ${appointment.tokenNumber}`);
-    doc.text(`Patient Name: ${appointment.patient ? appointment.patient.name : 'N/A'}`);
-    doc.text(`Doctor Name: Dr. ${appointment.doctor ? appointment.doctor.name : 'N/A'}`);
-    doc.text(`Hospital: ${appointment.hospital ? appointment.hospital.name : 'N/A'}`);
-    doc.text(`Date: ${appointment.date}`);
-    doc.text(`Time Slot: ${appointment.timeSlot}`);
-    doc.text(`Status: ${appointment.status}`);
-    doc.moveDown();
+    // Summary Box
+    doc.rect(50, 115, 495, 55).fill('#f8fafc');
+    doc.strokeColor('#e2e8f0').lineWidth(1).rect(50, 115, 495, 55).stroke();
 
-    // QR Code
+    // Summary content
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica-Bold').text('APPOINTMENT ID', 65, 125);
+    doc.fillColor('#1e293b').fontSize(11).font('Helvetica-Bold').text(appointment.appointmentNumber, 65, 137);
+
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica-Bold').text('TOKEN NUMBER', 220, 125);
+    doc.fillColor('#1e293b').fontSize(14).font('Helvetica-Bold').text(appointment.tokenNumber, 220, 135);
+
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica-Bold').text('STATUS', 380, 125);
+    
+    const status = appointment.status || 'Pending';
+    let statusColor = '#eab308'; // yellow
+    if (status === 'Accepted' || status === 'Confirmed' || status === 'Completed') statusColor = '#10b981'; // green
+    if (status === 'Rejected' || status === 'Cancelled') statusColor = '#ef4444'; // red
+    doc.fillColor(statusColor).fontSize(11).font('Helvetica-Bold').text(`● ${status}`, 380, 137);
+
+    // Details Grid Layout
+    let y = 190;
+    
+    // Section Title
+    doc.fillColor('#0e7ff0').fontSize(12).font('Helvetica-Bold').text('APPOINTMENT DETAILS', 50, y);
+    doc.moveTo(50, y + 16).lineTo(545, y + 16).strokeColor('#e2e8f0').stroke();
+    
+    y += 25;
+    
+    // Patient Information Section
+    doc.fillColor('#1e293b').fontSize(10).font('Helvetica-Bold').text('PATIENT INFORMATION', 50, y);
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Name:', 50, y + 15);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.patient ? appointment.patient.name : 'N/A', 120, y + 15);
+    
+    doc.fillColor('#64748b').font('Helvetica').text('Patient ID:', 50, y + 30);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.patient ? appointment.patient.id : 'N/A', 120, y + 30);
+    
+    doc.fillColor('#64748b').font('Helvetica').text('Phone:', 50, y + 45);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.patient ? appointment.patient.phone : 'N/A', 120, y + 45);
+    
+    doc.fillColor('#64748b').font('Helvetica').text('Email:', 50, y + 60);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.patient ? appointment.patient.email : 'N/A', 120, y + 60);
+
+    // Right Column: Hospital Information
+    doc.fillColor('#1e293b').fontSize(10).font('Helvetica-Bold').text('HOSPITAL INFORMATION', 300, y);
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Hospital:', 300, y + 15);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.hospital ? appointment.hospital.name : 'N/A', 360, y + 15, { width: 180 });
+    
+    doc.fillColor('#64748b').font('Helvetica').text('Address:', 300, y + 35);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.hospital ? appointment.hospital.address : 'N/A', 360, y + 35, { width: 180 });
+    
+    doc.fillColor('#64748b').font('Helvetica').text('Phone:', 300, y + 60);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.hospital ? appointment.hospital.phone : 'N/A', 360, y + 60);
+
+    y += 85;
+
+    // Doctor Info
+    doc.fillColor('#1e293b').fontSize(10).font('Helvetica-Bold').text('DOCTOR INFORMATION', 50, y);
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Doctor Name:', 50, y + 15);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.doctor ? `Dr. ${appointment.doctor.name}` : 'N/A', 120, y + 15);
+    
+    const specialization = appointment.doctor && appointment.doctor.doctor ? appointment.doctor.doctor.specialization : 'N/A';
+    doc.fillColor('#64748b').font('Helvetica').text('Specialization:', 50, y + 30);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(specialization, 120, y + 30);
+
+    const departmentName = appointment.doctor && appointment.doctor.doctor && appointment.doctor.doctor.department ? appointment.doctor.doctor.department.name : 'N/A';
+    doc.fillColor('#64748b').font('Helvetica').text('Department:', 50, y + 45);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(departmentName, 120, y + 45);
+
+    // Right Column: Schedule & Location Details
+    doc.fillColor('#1e293b').fontSize(10).font('Helvetica-Bold').text('SCHEDULE DETAILS', 300, y);
+    doc.fillColor('#64748b').fontSize(9).font('Helvetica').text('Date:', 300, y + 15);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.date, 360, y + 15);
+    
+    doc.fillColor('#64748b').font('Helvetica').text('Time Slot:', 300, y + 30);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(appointment.timeSlot, 360, y + 30);
+
+    const distanceVal = req.query.distance ? `${req.query.distance} km` : 'Not available';
+    doc.fillColor('#64748b').font('Helvetica').text('Distance:', 300, y + 45);
+    doc.fillColor('#1e293b').font('Helvetica-Bold').text(distanceVal, 360, y + 45);
+
+    y += 75;
+
+    // Reason for Visit
+    doc.fillColor('#1e293b').fontSize(10).font('Helvetica-Bold').text('REASON FOR VISIT', 50, y);
+    doc.fillColor('#334155').fontSize(9).font('Helvetica').text(appointment.reason || 'No clinical reason provided.', 50, y + 15, { width: 495 });
+
+    y += 50;
+
+    // Important Instructions
+    doc.fillColor('#e01e5a').fontSize(10).font('Helvetica-Bold').text('IMPORTANT INSTRUCTIONS', 50, y);
+    doc.moveTo(50, y + 16).lineTo(545, y + 16).strokeColor('#e2e8f0').stroke();
+    
+    y += 25;
+    doc.fillColor('#475569').fontSize(8.5).font('Helvetica');
+    doc.text('• Please arrive 10–15 minutes before your scheduled appointment time.', 50, y);
+    doc.text('• Carry a valid government-issued photo identity card when visiting the hospital.', 50, y + 15);
+    doc.text('• Bring previous medical reports, prescriptions, and test results if applicable.', 50, y + 30);
+    doc.text('• Contact the hospital front desk directly if you need to cancel or reschedule.', 50, y + 45);
+
+    // Scan & Verification QR Code Area
     const qrData = JSON.stringify({
       appointmentNumber: appointment.appointmentNumber,
       tokenNumber: appointment.tokenNumber,
@@ -499,10 +612,15 @@ export const downloadAppointmentReceipt = async (req, res, next) => {
       timeSlot: appointment.timeSlot,
       status: appointment.status
     });
-
     const qrCodeUrl = await QRCode.toDataURL(qrData);
-    doc.text('Scan to Verify Receipt:', { align: 'left' });
-    doc.image(qrCodeUrl, { fit: [150, 150], align: 'center' });
+    doc.image(qrCodeUrl, 420, y, { fit: [65, 65] });
+    doc.fillColor('#64748b').fontSize(7).text('Scan to Verify', 420, y + 70, { width: 65, align: 'center' });
+
+    // Footer
+    const localGenTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+    doc.moveTo(50, 750).lineTo(545, 750).strokeColor('#cbd5e1').stroke();
+    doc.fillColor('#94a3b8').fontSize(8).font('Helvetica').text('AI-HAS | Care, Connected', 50, 760);
+    doc.text(`Generated: ${localGenTime} (IST)`, 400, 760, { align: 'right', width: 145 });
 
     doc.end();
   } catch (error) {
