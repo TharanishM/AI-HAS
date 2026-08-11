@@ -56,21 +56,46 @@ const BookAppointment = () => {
     fetchDoctorDetails();
   }, [doctorId]);
 
-  const parseSlotToTime = (slotStr, baseDate) => {
-    const match = slotStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
-    if (!match) return null;
-    let [_, hours, minutes, ampm] = match;
-    hours = parseInt(hours);
-    minutes = parseInt(minutes);
-    if (ampm.toUpperCase() === 'PM' && hours !== 12) {
-      hours += 12;
+  const getIndiaTime = () => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(new Date());
+    const hours = parseInt(parts.find(p => p.type === 'hour').value, 10);
+    const minutes = parseInt(parts.find(p => p.type === 'minute').value, 10);
+    return { hours, minutes };
+  };
+
+  const parseSlotTo24h = (slotStr) => {
+    const match12 = slotStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+    if (match12) {
+      let [_, hours, minutes, ampm] = match12;
+      hours = parseInt(hours, 10);
+      minutes = parseInt(minutes, 10);
+      if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+      if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+      return { hours, minutes };
     }
-    if (ampm.toUpperCase() === 'AM' && hours === 12) {
-      hours = 0;
+    const match24 = slotStr.match(/^(\d+):(\d+)$/);
+    if (match24) {
+      const hours = parseInt(match24[1], 10);
+      const minutes = parseInt(match24[2], 10);
+      return { hours, minutes };
     }
-    const date = new Date(baseDate);
-    date.setHours(hours, minutes, 0, 0);
-    return date;
+    return null;
+  };
+
+  const isSlotInPast = (slotStr) => {
+    const slotTime = parseSlotTo24h(slotStr);
+    if (!slotTime) return false;
+    const nowIndia = getIndiaTime();
+    if (slotTime.hours < nowIndia.hours) return true;
+    if (slotTime.hours === nowIndia.hours && slotTime.minutes <= nowIndia.minutes) return true;
+    return false;
   };
 
   useEffect(() => {
@@ -90,11 +115,7 @@ const BookAppointment = () => {
       // Filter out past time slots if selectedDate is today
       const todayLocalStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
       if (selectedDate === todayLocalStr) {
-        const nowIndia = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-        slotsToShow = slotsToShow.filter(slot => {
-          const slotTime = parseSlotToTime(slot, nowIndia);
-          return slotTime && slotTime > nowIndia;
-        });
+        slotsToShow = slotsToShow.filter(slot => !isSlotInPast(slot));
       }
 
       setAvailableSlots(slotsToShow);

@@ -42,31 +42,59 @@ export const bookAppointment = async (req, res, next) => {
     const { doctorId, hospitalId, date, timeSlot, reason } = req.body;
     const patientId = req.user.id;
 
+    const getIndiaTime = () => {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false
+      });
+      const parts = formatter.formatToParts(new Date());
+      const hours = parseInt(parts.find(p => p.type === 'hour').value, 10);
+      const minutes = parseInt(parts.find(p => p.type === 'minute').value, 10);
+      return { hours, minutes };
+    };
+
+    const parseSlotTo24h = (slotStr) => {
+      const match12 = slotStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+      if (match12) {
+        let [_, hours, minutes, ampm] = match12;
+        hours = parseInt(hours, 10);
+        minutes = parseInt(minutes, 10);
+        if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+        if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+        return { hours, minutes };
+      }
+      const match24 = slotStr.match(/^(\d+):(\d+)$/);
+      if (match24) {
+        const hours = parseInt(match24[1], 10);
+        const minutes = parseInt(match24[2], 10);
+        return { hours, minutes };
+      }
+      return null;
+    };
+
+    const isSlotInPast = (slotStr) => {
+      const slotTime = parseSlotTo24h(slotStr);
+      if (!slotTime) return false;
+      const nowIndia = getIndiaTime();
+      if (slotTime.hours < nowIndia.hours) return true;
+      if (slotTime.hours === nowIndia.hours && slotTime.minutes <= nowIndia.minutes) return true;
+      return false;
+    };
+
     // Validate that the appointment date is not in the past (using India timezone)
     const todayDateOnly = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD
     if (date < todayDateOnly) {
       await t.rollback();
-      return res.status(400).json({ success: false, message: 'Please select today or a future appointment date.' });
+      return res.status(400).json({ success: false, message: 'Appointment date and time must be in the future.' });
     }
 
     // Validate that the timeslot is not in the past if scheduled for today
-    if (date === todayDateOnly) {
-      const match = timeSlot.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
-      if (match) {
-        let [_, hours, minutes, ampm] = match;
-        hours = parseInt(hours);
-        minutes = parseInt(minutes);
-        if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
-        if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
-        
-        const nowIndia = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-        const slotTime = new Date(nowIndia);
-        slotTime.setHours(hours, minutes, 0, 0);
-        if (slotTime <= nowIndia) {
-          await t.rollback();
-          return res.status(400).json({ success: false, message: 'The selected time slot has already passed.' });
-        }
-      }
+    if (date === todayDateOnly && isSlotInPast(timeSlot)) {
+      await t.rollback();
+      return res.status(400).json({ success: false, message: 'Appointment date and time must be in the future.' });
     }
 
     const doctorUser = await User.findByPk(doctorId, { transaction: t });
