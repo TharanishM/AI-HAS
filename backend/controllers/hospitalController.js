@@ -1,6 +1,7 @@
 import Hospital from '../models/Hospital.js';
 import Doctor from '../models/Doctor.js';
 import User from '../models/User.js';
+import Department from '../models/Department.js';
 import sequelize from '../config/db.js';
 import { Op } from 'sequelize';
 
