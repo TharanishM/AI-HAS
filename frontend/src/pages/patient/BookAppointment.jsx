@@ -306,7 +306,7 @@ const BookAppointment = () => {
                       <Clock className="w-4 h-4 text-brand-500" /> Available Time Slots
                     </label>
                     {availableSlots.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2.5 mt-1">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-1">
                         {availableSlots.map((slot) => (
                           <button
                             key={slot}
